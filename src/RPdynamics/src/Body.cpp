@@ -6,6 +6,14 @@ Body::Body(double mass, Vec3 com, Mat3 Ic)
     mcI_to_rbi();
 }
 
+void Body::set_mcI(double mass, Vec3 com, Mat3 Ic)
+{
+    _mass = mass;
+    _com = com;
+    _Ic = Ic;
+    mcI_to_rbi();
+}
+
 void Body::mcI_to_rbi()
 {
     Mat3 C;

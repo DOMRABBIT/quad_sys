@@ -31,7 +31,8 @@ enum BaseType
 enum class Coordiante
 {
     BODY,
-    BASE
+    BASE,
+    INERTIAL
 };
 
 #endif

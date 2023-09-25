@@ -1,18 +1,13 @@
 #include "RPBody.h"
 #include "RPJoint.h"
+#include "RPRobot.h"
+#include "Build_A1.h"
 
 int main()
 {
-    double m = 1.0;
-    Vec3 com;
-    com << 1, 1, 1;
-    Mat3 Ic;
-    Ic.setIdentity();
-
-    Body body(m, com, Ic);
-    // Vec6 value;
-    // value.setZero();
-    // Joint<Vec6> Joint(JointType::RX, value);
+    Robot *a1 = new Robot(12, 4);
+    build_a1(a1);
+    // Loop joint and floating base settings are not completed!
 
     return 0;
 }

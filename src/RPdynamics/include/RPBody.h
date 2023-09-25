@@ -21,6 +21,7 @@ class Body
         Vec3 get_com() { return _com; }
         Mat3 get_Ic() { return _Ic; }
         Mat6 get_rbi() { return _rbi; }
+        void set_mcI(double mass, Vec3 com, Mat3 Ic);
 
         double _mass;
         Vec3 _com;

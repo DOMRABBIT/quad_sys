@@ -151,8 +151,10 @@ Mat6 crf(Vec6 v)
 }
 
 // Ajoint operation: calculate generalize transformation from rotation matrix and distance vector
-void AdjointT(Mat3 R, Vec3 p, Mat6 &X)
+void AdjointT(Mat4 T, Mat6 &X)
 {
+    Mat3 R = T.block(0, 0, 3, 3);
+    Vec3 p = T.block(0, 3, 3, 1);
     Mat3 pR;
     Mat3 px;
     px << 0, -p(2), p(1),
@@ -163,4 +165,11 @@ void AdjointT(Mat3 R, Vec3 p, Mat6 &X)
     X.block(0, 0, 3, 3) = R;
     X.block(3, 3, 3, 3) = R;
     X.block(3, 0, 3, 3) = pR;
+}
+
+void Rp2T(Mat3 R, Vec3 p, Mat4 &T)
+{
+    T.setIdentity();
+    T.block(0, 0, 3, 3) = R;
+    T.block(0, 3, 3, 1) = p;
 }

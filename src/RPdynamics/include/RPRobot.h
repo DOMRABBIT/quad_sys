@@ -6,6 +6,8 @@
 #include "MathType.h"
 #include "TimeCounter.h"
 
+#define WORLD -2
+
 class LoopJoint : public Joint
 {
 public:
@@ -18,20 +20,10 @@ public:
     Mat4 Ts; // loop joint's frame represent to successor link's frame
     MatX T;  // constrian force space represent at loop joint frame
 
-private:
-};
-
-class Base : public Body
-{
-public:
-    Base() {}
-    Base(BaseType basetype)
-        : _basetype(basetype) {}
-    ~Base() {}
-    BaseType get_BaseType() { return _basetype; }
+    int _suc;
+    int _pre;
 
 private:
-    BaseType _basetype;
 };
 
 class FltJoint : public Joint
@@ -46,8 +38,26 @@ public:
 
     Mat6 _X_Wrd2Base;
     Mat6 _X_Base2Wrd;
+    Mat4 _T_Wrd2Base;
+    Mat4 _T_Base2Wrd;
 
 private:
+};
+
+class Base : public Body
+{
+public:
+    Base() {}
+    Base(BaseType basetype)
+        : _basetype(basetype) {}
+    ~Base() {}
+    FltJoint *_fltjoint;
+
+    BaseType get_BaseType() { return _basetype; }
+    void set_BaseType(BaseType bt) { _basetype = bt; }
+
+private:
+    BaseType _basetype;
 };
 
 class Robot
@@ -59,9 +69,9 @@ class Robot
 
         int _NB;
         int _NL;
-        int *parent;
+        int *_parent;
 
-        Base _base;
+        Base *_base;
         Body *_body;
         Joint* _joint;
         LoopJoint *_lpjoint;
@@ -82,8 +92,8 @@ class Robot
 
         bool _isUpdated;
         void Forward_Kinematic();
-        MatX Cal_Jacobian(int num, Coordiante frame);
-        Mat4 Flt_Transform(double q[]);
+        MatX Cal_Jacobian(int ib, Coordiante frame);
+        Mat4 Flt_Transform();
 
         long long _systick;
 

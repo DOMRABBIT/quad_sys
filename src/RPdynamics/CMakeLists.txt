@@ -140,6 +140,7 @@ file(GLOB_RECURSE SRC_LIST
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node src/DYTest.cpp
+                                    src/Build_A1.cpp
                                        ${SRC_LIST})
 
 ## Rename C++ executable without prefix

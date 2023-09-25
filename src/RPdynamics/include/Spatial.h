@@ -17,6 +17,6 @@ Mat4 roz(double theta);
 Mat4 Flt_Transform(double q[]);
 Mat6 crm(Vec6 v);
 Mat6 crf(Vec6 v);
-
-void AdjointT(Mat3 R, Vec3 p, Mat6 &X);
+void Rp2T(Mat3 R, Vec3 p, Mat4 &T);
+void AdjointT(Mat4 T, Mat6 &X);
 #endif
