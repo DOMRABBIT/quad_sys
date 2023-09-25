@@ -47,7 +47,7 @@ int main(int argc, char **argv)
     ioInter = new IOROS();
     ctrlPlat = CtrlPlatform::GAZEBO;
 #endif // COMPILE_WITH_SIMULATION
-
+ 
 #ifdef COMPILE_WITH_REAL_ROBOT
     ioInter = new IOSDK();
     ctrlPlat = CtrlPlatform::REALROBOT;
