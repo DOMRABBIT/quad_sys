@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "${default}",
+                "limitSymbolsToIncludedHeaders": false
+            },
+            "includePath": [
+                "/opt/ros/noetic/include/**",
+                "/home/crp/git/quad_sys/src/RPdynamics/include/**",
+                "/home/crp/git/quad_sys/src/gazebo_sim/include/**",
+                "/home/crp/git/quad_sys/src/quadsys/include/**",
+                "/home/crp/git/quad_sys/src/unitree_ros/unitree_controller/include/**",
+                "/home/crp/git/quad_sys/src/unitree_ros/unitree_legged_control/include/**",
+                "/usr/include/**",
+                "${workspaceFolder}/devel/include"
+            ],
+            "name": "ROS",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu11",
+            "cppStandard": "c++14"
+        }
+    ],
+    "version": 4
+}

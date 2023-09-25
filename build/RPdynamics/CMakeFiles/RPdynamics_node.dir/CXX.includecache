@@ -1,0 +1,46 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/crp/git/quad_sys/src/RPdynamics/include/MathType.h
+eigen3/Eigen/Dense
+-
+
+/home/crp/git/quad_sys/src/RPdynamics/include/RPBody.h
+MathType.h
+/home/crp/git/quad_sys/src/RPdynamics/include/MathType.h
+
+/home/crp/git/quad_sys/src/RPdynamics/include/RPJoint.h
+MathType.h
+/home/crp/git/quad_sys/src/RPdynamics/include/MathType.h
+RPenum.h
+/home/crp/git/quad_sys/src/RPdynamics/include/RPenum.h
+
+/home/crp/git/quad_sys/src/RPdynamics/include/RPRobot.h
+RPBody.h
+/home/crp/git/quad_sys/src/RPdynamics/include/RPBody.h
+RPJoint.h
+/home/crp/git/quad_sys/src/RPdynamics/include/RPJoint.h
+MathType.h
+/home/crp/git/quad_sys/src/RPdynamics/include/MathType.h
+TimeCounter.h
+/home/crp/git/quad_sys/src/RPdynamics/include/TimeCounter.h
+
+/home/crp/git/quad_sys/src/RPdynamics/include/RPenum.h
+
+/home/crp/git/quad_sys/src/RPdynamics/include/TimeCounter.h
+iostream
+-
+sys/time.h
+-
+unistd.h
+-
+
+/home/crp/git/quad_sys/src/RPdynamics/src/RPRobot.cpp
+RPRobot.h
+/home/crp/git/quad_sys/src/RPdynamics/src/RPRobot.h
+

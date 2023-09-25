@@ -1,0 +1,93 @@
+#ifndef _RP_ROBOT_H
+#define _RP_ROBOT_H
+
+#include "RPBody.h"
+#include "RPJoint.h"
+#include "MathType.h"
+#include "TimeCounter.h"
+
+class LoopJoint : public Joint
+{
+public:
+    LoopJoint() {}
+    ~LoopJoint() {}
+
+    Mat6 Xp; // loop joint's frame represent to predessor link's frame
+    Mat6 Xs; // loop joint's frame represent to successor link's frame
+    Mat4 Tp; // loop joint's frame represent to predessor link's frame
+    Mat4 Ts; // loop joint's frame represent to successor link's frame
+    MatX T;  // constrian force space represent at loop joint frame
+
+private:
+};
+
+class Base : public Body
+{
+public:
+    Base() {}
+    Base(BaseType basetype)
+        : _basetype(basetype) {}
+    ~Base() {}
+    BaseType get_BaseType() { return _basetype; }
+
+private:
+    BaseType _basetype;
+};
+
+class FltJoint : public Joint
+{
+public:
+    FltJoint()
+    {
+        _X_Base2Wrd.setIdentity();
+        _X_Base2Wrd.setIdentity();
+    }
+    ~FltJoint() {}
+
+    Mat6 _X_Wrd2Base;
+    Mat6 _X_Base2Wrd;
+
+private:
+};
+
+class Robot
+{
+    public:
+        Robot(int NB, int NJ);
+        Robot(int NB);
+        ~Robot() {}
+
+        int _NB;
+        int _NL;
+        int *parent;
+
+        Base _base;
+        Body *_body;
+        Joint* _joint;
+        LoopJoint *_lpjoint;
+        double _quat_xyz[7];
+
+        double *_q;
+        double *_dq;
+
+        Mat6 *X_dwtree;    // body(i) coordinate respect to body(i-1) coordinate
+        Mat6 *X_uptree;    // body(i-1) coordinate respect to body(i) coordinate
+        Mat6 *Xj;          // joint(i) coordinate respect to body(i-1) coordinate
+        Mat6 *Xq;          // body(i) coordinte respect to joint(i) coordinte
+
+        Mat4 *T_dwtree;    // body(i) coordinate respect to body(i-1) coordinate
+        Mat4 *T_uptree;    // body(i-1) coordinate respect to body(i) coordinate
+        Mat4 *Tj;          // joint(i) coordinate respect to body(i-1) coordinate
+        Mat4 *Tq;          // body(i) coordinte respect to joint(i) coordinte
+
+        bool _isUpdated;
+        void Forward_Kinematic();
+        MatX Cal_Jacobian(int num, Coordiante frame);
+        Mat4 Flt_Transform(double q[]);
+
+        long long _systick;
+
+    private:
+};
+
+#endif
