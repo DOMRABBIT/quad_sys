@@ -1,2 +1,0 @@
-RPdynamics:a1_description:gazebo_sim:quadsys:unitree_legged_msgs:unitree_ros/unitree_controller:unitree_ros/unitree_gazebo:unitree_ros/unitree_legged_control
--DCATKIN_DEVEL_PREFIX=/home/crp/git/quad_sys/devel -DCMAKE_INSTALL_PREFIX=/home/crp/git/quad_sys/install -G Unix Makefiles
