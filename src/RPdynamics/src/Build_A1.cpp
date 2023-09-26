@@ -3,18 +3,35 @@
 
 void build_a1(Robot *a1)
 {
-    a1->_base->set_BaseType(BaseType::Floating);
+    Vec3 com;
+    Mat3 Ic;
+    Mat3 rpy;
+    Vec3 xyz;
     int parentset[12] = {-1, 0, 1, -1, 3, 4, -1, 6, 7, -1, 9, 10};
     // number the parent set
     for (int i = 0; i < a1->_NB; i++)
     {
         a1->_parent[i] = parentset[i];
     }
+
+    //Floating base settings
+    a1->_base->set_BaseType(BaseType::Floating);
+    // com << 0, 0.0041, -0.0005;
+    Ic << 0.0158533, 0, 0,
+        0, 0.0377999, 0,
+        0, 0, 0.0456542;
+    a1->_base->set_mcI(6.0, com, Ic);
+    rpy << 1, 0, 0,
+        0, 1, 0,
+        0, 0, 1;
+    xyz << 0, 0, 0;
+    a1->_base->_fltjoint->set_rpy_xyz(rpy, xyz);
+    a1->_base->_fltjoint->_T_Base2Wrd.setIdentity();
+    a1->_base->_fltjoint->_T_Wrd2Base.setIdentity();
+    a1->_base->_fltjoint->_X_Base2Wrd.setIdentity();
+    a1->_base->_fltjoint->_X_Wrd2Base.setIdentity();
+
     // build bodys and joints
-    Vec3 com;
-    Mat3 Ic;
-    Mat3 rpy;
-    Vec3 xyz;
     double initVal[6] = {0, 0, 0, 0, 0, 0};
     /**-----   FR_hip   ----**/
     com << -0.003311, -0.000635, 3.1e-05;
@@ -185,11 +202,74 @@ void build_a1(Robot *a1)
     }
 
     /*-- Loop joint --*/
+
     // Setting loop joint 0
     a1->_lpjoint[0]._pre = WORLD;
     a1->_lpjoint[0]._suc = 2;
     a1->_lpjoint[0].set_type_val(JointType::SPHERE, nullptr);
-    
+    rpy << 1, 0, 0,
+        0, 1, 0,
+        0, 0, 1;
+    xyz << 0, 0, -0.2;
+    Rp2T(rpy, xyz, a1->_lpjoint[0].Ts);
+    AdjointT(a1->_lpjoint[0].Ts, a1->_lpjoint[0].Xs);
+    rpy << 1, 0, 0,
+        0, 1, 0,
+        0, 0, 1;
+    xyz << 0, 0, 0;
+    Rp2T(rpy, xyz, a1->_lpjoint[0].Tp);
+    AdjointT(a1->_lpjoint[0].Tp, a1->_lpjoint[0].Xp);
+
+    // Setting loop joint 1
+    a1->_lpjoint[1]._pre = WORLD;
+    a1->_lpjoint[1]._suc = 5;
+    a1->_lpjoint[1].set_type_val(JointType::SPHERE, nullptr);
+    rpy << 1, 0, 0,
+        0, 1, 0,
+        0, 0, 1;
+    xyz << 0, 0, -0.2;
+    Rp2T(rpy, xyz, a1->_lpjoint[1].Ts);
+    AdjointT(a1->_lpjoint[1].Ts, a1->_lpjoint[1].Xs);
+    rpy << 1, 0, 0,
+        0, 1, 0,
+        0, 0, 1;
+    xyz << 0, 0, 0;
+    Rp2T(rpy, xyz, a1->_lpjoint[1].Tp);
+    AdjointT(a1->_lpjoint[1].Tp, a1->_lpjoint[1].Xp);
+
+    // Setting loop joint 2
+    a1->_lpjoint[2]._pre = WORLD;
+    a1->_lpjoint[2]._suc = 8;
+    a1->_lpjoint[2].set_type_val(JointType::SPHERE, nullptr);
+    rpy << 1, 0, 0,
+        0, 1, 0,
+        0, 0, 1;
+    xyz << 0, 0, -0.2;
+    Rp2T(rpy, xyz, a1->_lpjoint[2].Ts);
+    AdjointT(a1->_lpjoint[2].Ts, a1->_lpjoint[2].Xs);
+    rpy << 1, 0, 0,
+        0, 1, 0,
+        0, 0, 1;
+    xyz << 0, 0, 0;
+    Rp2T(rpy, xyz, a1->_lpjoint[2].Tp);
+    AdjointT(a1->_lpjoint[2].Tp, a1->_lpjoint[2].Xp);
+
+    // Setting loop joint 3
+    a1->_lpjoint[3]._pre = WORLD;
+    a1->_lpjoint[3]._suc = 11;
+    a1->_lpjoint[3].set_type_val(JointType::SPHERE, nullptr);
+    rpy << 1, 0, 0,
+        0, 1, 0,
+        0, 0, 1;
+    xyz << 0, 0, -0.2;
+    Rp2T(rpy, xyz, a1->_lpjoint[3].Ts);
+    AdjointT(a1->_lpjoint[3].Ts, a1->_lpjoint[3].Xs);
+    rpy << 1, 0, 0,
+        0, 1, 0,
+        0, 0, 1;
+    xyz << 0, 0, 0;
+    Rp2T(rpy, xyz, a1->_lpjoint[3].Tp);
+    AdjointT(a1->_lpjoint[3].Tp, a1->_lpjoint[3].Xp);
 
     std::cout
         << std::endl

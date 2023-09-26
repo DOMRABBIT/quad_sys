@@ -173,12 +173,22 @@ void Joint::set_type_val(JointType jtype, double *Init_value)
         _DOF = 3;
     case JointType::FLOATING:
         _S_Body.setIdentity(6, 6);
-        _T_Body.setZero(6, 4);
+        _T_Body.setZero(6, 6);
         _DOF = 6;
     default:
+        _S_Body.setZero(6, 1);
         _S_Body
-            << 0, 0, 1, 0, 0, 0;
-        break;
+            << 0,
+            0, 1, 0, 0, 0;
+        _T_Body.setZero(6, 5);
+        _T_Body
+            << 1, 0, 0, 0, 0,
+            0, 1, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 1, 0, 0,
+            0, 0, 0, 1, 0,
+            0, 0, 0, 0, 1;
+        _DOF = 1;
     }
     for (int i = 0; i < _DOF; i++)
     {

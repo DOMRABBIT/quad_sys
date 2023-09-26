@@ -4,6 +4,7 @@
 Robot::Robot(int NB, int NL)
 :_NB(NB), _NL(NL)
 {
+    _base = (Base *)malloc(sizeof(Base));
     _body = (Body *)malloc(sizeof(Body) * _NB);
     _joint = (Joint *)malloc(sizeof(Joint) * _NB);
     _parent = (int *)malloc(sizeof(int) * _NB);
@@ -18,6 +19,7 @@ Robot::Robot(int NB, int NL)
     _q = (double *)malloc(sizeof(double) * _NB);
     _dq = (double *)malloc(sizeof(double) * _NB);
 
+    _base->_fltjoint = (FltJoint *)malloc(sizeof(FltJoint));
     _lpjoint = (LoopJoint *)malloc(sizeof(LoopJoint) * _NL);
 
     for (int i = 0; i < _NB; i++)
@@ -48,6 +50,7 @@ Robot::Robot(int NB)
     : _NB(NB)
 {
     _NL = 0;
+    _base = (Base *)malloc(sizeof(Base));
     _body = (Body *)malloc(sizeof(Body) * _NB);
     _joint = (Joint *)malloc(sizeof(Joint) * _NB);
     _parent = (int *)malloc(sizeof(int) * _NB);
