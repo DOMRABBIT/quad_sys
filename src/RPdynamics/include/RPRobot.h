@@ -5,6 +5,7 @@
 #include "RPJoint.h"
 #include "MathType.h"
 #include "TimeCounter.h"
+#include "urdfData.h"
 
 #define WORLD -2
 
@@ -29,7 +30,7 @@ private:
 class FltJoint : public Joint
 {
 public:
-    FltJoint()
+    FltJoint(urjoint *urj) : Joint(urj)
     {
         _X_Base2Wrd.setIdentity();
         _X_Base2Wrd.setIdentity();
@@ -89,13 +90,33 @@ class Robot
         Mat4 *T_uptree;    // body(i-1) coordinate respect to body(i) coordinate
         Mat4 *Tj;          // joint(i) coordinate respect to body(i-1) coordinate
         Mat4 *Tq;          // body(i) coordinte respect to joint(i) coordinte
-
+        long long _systick;
         bool _isUpdated;
-        void Forward_Kinematic();
+
+        void Update_Model();
         MatX Cal_Jacobian(int ib, Coordiante frame);
         Mat4 Flt_Transform();
+        // bool _isUpdate();
 
-        long long _systick;
+    private:
+};
+
+class a1Robot : public Robot
+{
+    public:
+        a1Robot():Robot(12,4)
+        {
+            _urdf = new urdfData(12, 12);
+            witre_urdfData();
+            build_a1();
+            _systick = getSystemTime();
+            std::cout << "Initialize Robot a1 completed..."
+                      << "time stamp: " << _systick << std::endl;
+        }
+        urdfData *_urdf;
+
+        void witre_urdfData();
+        void build_a1();
 
     private:
 };

@@ -2,6 +2,7 @@
 #define RP_BODY_H
 
 #include "MathType.h"
+#include "urdfData.h"
 
 class Body
 {
@@ -13,7 +14,7 @@ class Body
             _Ic.setZero();
             _rbi.setZero();
         }
-        Body(double mass, Vec3 com, Mat3 Ic);
+        Body(urbody *urb);
         ~Body() {}
         void mcI_to_rbi();
 
@@ -21,7 +22,7 @@ class Body
         Vec3 get_com() { return _com; }
         Mat3 get_Ic() { return _Ic; }
         Mat6 get_rbi() { return _rbi; }
-        void set_mcI(double mass, Vec3 com, Mat3 Ic);
+        void set_mcI(urbody *urb);
 
         double _mass;
         Vec3 _com;

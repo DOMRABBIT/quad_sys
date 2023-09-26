@@ -1,14 +1,14 @@
 #include "RPJoint.h"
 
-Joint::Joint(JointType jtype, double* Init_value)
+Joint::Joint(urjoint *urj)
 {
-    set_type_val(jtype, Init_value);
+    set_type(urj->_jt);
+    set_rpy_xyz(urj->_rpyMat, urj->_xyz);
 }
 
-void Joint::set_type_val(JointType jtype, double *Init_value)
+void Joint::set_type(JointType jtype)
 {
     _jtype = jtype;
-    _Init_value = Init_value;
     switch (jtype)
     {
     case JointType::RX:
@@ -189,11 +189,6 @@ void Joint::set_type_val(JointType jtype, double *Init_value)
             0, 0, 0, 1, 0,
             0, 0, 0, 0, 1;
         _DOF = 1;
-    }
-    for (int i = 0; i < _DOF; i++)
-    {
-        if (Init_value != nullptr)
-            _Init_value[i] = Init_value[i];
     }
 }
 

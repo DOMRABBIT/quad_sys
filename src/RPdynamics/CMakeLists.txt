@@ -104,7 +104,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 INCLUDE_DIRS include
-#  LIBRARIES RPdynamics
+  LIBRARIES RPdynamics
 #  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
@@ -127,9 +127,11 @@ file(GLOB_RECURSE SRC_LIST
     "src/*.cc"
 )
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/RPdynamics.cpp
-# )
+add_library(${PROJECT_NAME}
+  src/DYTest.cpp
+  src/Build_A1.cpp
+  ${SRC_LIST}
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -141,6 +143,7 @@ file(GLOB_RECURSE SRC_LIST
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node src/DYTest.cpp
                                     src/Build_A1.cpp
+                                    src/visual_rviz.cpp
                                        ${SRC_LIST})
 
 ## Rename C++ executable without prefix

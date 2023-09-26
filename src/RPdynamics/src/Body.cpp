@@ -1,16 +1,16 @@
 #include "RPBody.h"
 
-Body::Body(double mass, Vec3 com, Mat3 Ic)
-    :_mass(mass), _com(com), _Ic(Ic)
+Body::Body(urbody *urb)
+    :_mass(urb->_mass), _com(urb->_com), _Ic(urb->_Ic)
 {
     mcI_to_rbi();
 }
 
-void Body::set_mcI(double mass, Vec3 com, Mat3 Ic)
+void Body::set_mcI(urbody *urb)
 {
-    _mass = mass;
-    _com = com;
-    _Ic = Ic;
+    _mass = urb->_mass;
+    _com = urb->_com;
+    _Ic = urb->_Ic;
     mcI_to_rbi();
 }
 
