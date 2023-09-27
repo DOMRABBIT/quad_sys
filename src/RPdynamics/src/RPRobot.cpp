@@ -34,6 +34,8 @@ Robot::Robot(int NB, int NL)
         T_uptree[i] = Mat4::Identity(4, 4);
         Tj[i] = Mat4::Identity(4, 4);
         Tq[i] = Mat4::Identity(4, 4);
+        _q[i] = 0;
+        _dq[i] = 0;
     }
 
     for (int i = 0; i < NL; i++)
@@ -96,53 +98,57 @@ Robot::Robot(int NB)
 
 void Robot::Update_Model()
 {
-    if(_base->get_BaseType() == BaseType::Floating)
+    if (!_isUpdated)
     {
-        Mat4 T = Flt_Transform();
-        _base->_fltjoint->_T_Base2Wrd = T;
-        AdjointT(T, _base->_fltjoint->_X_Base2Wrd);
-        T.transposeInPlace();
-        _base->_fltjoint->_T_Wrd2Base = T;
-        AdjointT(T, _base->_fltjoint->_X_Wrd2Base);
-    }
-    else
-    {
-        _base->_fltjoint->_T_Base2Wrd.setIdentity();
-        _base->_fltjoint->_T_Wrd2Base.setIdentity();
-        _base->_fltjoint->_X_Base2Wrd.setIdentity();
-        _base->_fltjoint->_X_Wrd2Base.setIdentity();
-    }
-
-    for (int i = 0; i < _NB; i++)
-    {
-        if (_joint[i]._jtype == JointType::RZ)
+        if (_base->get_BaseType() == BaseType::Floating)
         {
-            Xq[i] = rotz(_q[i]); // X_down
-            Tq[i] = roz(_q[i]);  // T_down
+            Mat4 T = Flt_Transform();
+            _base->_fltjoint->_T_Base2Wrd = T;
+            AdjointT(T, _base->_fltjoint->_X_Base2Wrd);
+            T.transposeInPlace();
+            _base->_fltjoint->_T_Wrd2Base = T;
+            AdjointT(T, _base->_fltjoint->_X_Wrd2Base);
         }
-        else if (_joint[i]._jtype == JointType::RX)
+        else
         {
-            Xq[i] = rotx(_q[i]); // X_down
-            Tq[i] = rox(_q[i]);  // T_down
-        }
-        else if (_joint[i]._jtype == JointType::RY)
-        {
-            Xq[i] = roty(_q[i]); // X_down
-            Tq[i] = roy(_q[i]);  // T_down
+            _base->_fltjoint->_T_Base2Wrd.setIdentity();
+            _base->_fltjoint->_T_Wrd2Base.setIdentity();
+            _base->_fltjoint->_X_Base2Wrd.setIdentity();
+            _base->_fltjoint->_X_Wrd2Base.setIdentity();
         }
 
-        X_dwtree[i] = Xj[i] * Xq[i];
-        T_dwtree[i] = Tj[i] * Tq[i];
+        for (int i = 0; i < _NB; i++)
+        {
+            if (_joint[i]._jtype == JointType::RZ)
+            {
+                Xq[i] = rotz(_q[i]); // X_down
+                Tq[i] = roz(_q[i]);  // T_down
+            }
+            else if (_joint[i]._jtype == JointType::RX)
+            {
+                Xq[i] = rotx(_q[i]); // X_down
+                Tq[i] = rox(_q[i]);  // T_down
+            }
+            else if (_joint[i]._jtype == JointType::RY)
+            {
+                Xq[i] = roty(_q[i]); // X_down
+                Tq[i] = roy(_q[i]);  // T_down
+            }
 
-        Mat3 R;
-        Vec3 xyz;
-        R = T_dwtree[i].block(0, 0, 3, 3).transpose();
-        xyz = (-R) * T_dwtree[i].block(0, 3, 3, 1);
-        Rp2T(R,xyz,T_uptree[i]);
-        AdjointT(T_uptree[i], X_uptree[i]);
-        // std::cout << i << ": " << std::endl
-        //           << T_dwtree[i] << std::endl;
+            X_dwtree[i] = Xj[i] * Xq[i];
+            T_dwtree[i] = Tj[i] * Tq[i];
+
+            Mat3 R;
+            Vec3 xyz;
+            R = T_dwtree[i].block(0, 0, 3, 3).transpose();
+            xyz = (-R) * T_dwtree[i].block(0, 3, 3, 1);
+            Rp2T(R, xyz, T_uptree[i]);
+            AdjointT(T_uptree[i], X_uptree[i]);
+            // std::cout << i << ": " << std::endl
+            //           << T_dwtree[i] << std::endl;
+        }
     }
+        
     _isUpdated = true;
 }
 

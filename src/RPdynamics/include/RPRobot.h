@@ -34,9 +34,11 @@ public:
     {
         _X_Base2Wrd.setIdentity();
         _X_Base2Wrd.setIdentity();
+        S_flt.setIdentity();
     }
     ~FltJoint() {}
 
+    Mat6 S_flt;
     Mat6 _X_Wrd2Base;
     Mat6 _X_Base2Wrd;
     Mat4 _T_Wrd2Base;

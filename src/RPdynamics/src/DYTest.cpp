@@ -3,6 +3,7 @@
 #include "RPRobot.h"
 #include "Build_A1.h"
 #include "visual_rviz.h"
+#include "dynamics.h"
 
 using namespace std;
 
@@ -16,6 +17,11 @@ int main(int argc, char *argv[])
     ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 1);
 
     a1Robot *a1 = new a1Robot();
+    Dynamics *dy = new Dynamics(a1);
+
+    cout << a1->_q[0] << endl;
+    cout << dy->_q[0] << endl;
+
 
     double q[12] = {0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
     for (int i = 0; i < a1->_NB; i++)

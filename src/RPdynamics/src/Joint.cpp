@@ -54,127 +54,127 @@ void Joint::set_type(JointType jtype)
             0, 0, 0, 0, 1;
         _DOF = 1;
         break;
-    case JointType::PX:
-        _S_Body.setZero(6, 1);
-        _S_Body
-            << 0,  0, 0, 1, 0, 0;
-        _T_Body.setZero(6, 5);
-        _T_Body
-            << 1, 0, 0, 0, 0,
-            0, 1, 0, 0, 0,
-            0, 0, 1, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 1, 0,
-            0, 0, 0, 0, 1;
-        _DOF = 1;
-        break;
-    case JointType::PY:
-        _S_Body.setZero(6, 1);
-        _S_Body
-            << 0, 0, 0, 0, 1, 0;
-        _T_Body.setZero(6, 5);
-        _T_Body
-            << 1, 0, 0, 0, 0,
-            0, 1, 0, 0, 0,
-            0, 0, 1, 0, 0,
-            0, 0, 0, 1, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0, 1;
-        _DOF = 1;
-        break;
-    case JointType::PZ:
-        _S_Body.setZero(6, 1);
-        _S_Body
-            << 0, 0, 0, 0, 0, 1;
-        _T_Body.setZero(6, 5);
-        _T_Body
-            << 1, 0, 0, 0, 0,
-            0, 1, 0, 0, 0,
-            0, 0, 1, 0, 0,
-            0, 0, 0, 1, 0,
-            0, 0, 0, 0, 1,
-            0, 0, 0, 0, 0;
-        _DOF = 1;
-        break;
-    case JointType::UXY:
-        _S_Body.setZero(6, 2);
-        _S_Body
-            << 1, 0,
-            0, 1,
-            0, 0,
-            0, 0,
-            0, 0,
-            0, 0;
-        _T_Body.setZero(6, 4);
-        _T_Body
-            << 0,  0, 0, 0,
-            0, 0, 0, 0,
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1;
-        _DOF = 2;
-        break;
-    case JointType::UXZ:
-        _S_Body.setZero(6, 2);
-        _S_Body
-            << 1,  0,
-            0, 0,
-            0, 1,
-            0, 0,
-            0, 0,
-            0, 0;
-        _T_Body.setZero(6, 4);
-        _T_Body
-            << 0,  0, 0, 0,
-            1, 0, 0, 0,
-            0, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1;
-        _DOF = 2;
-        break;
-    case JointType::UYZ:
-        _S_Body.setZero(6, 2);
-        _S_Body
-            << 0,  0,
-            1, 0,
-            0, 1,
-            0, 0,
-            0, 0,
-            0, 0;
-        _T_Body.setZero(6, 4);
-        _T_Body
-            << 1, 0, 0, 0,
-            0, 0, 0, 0,
-            0, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1;
-        _DOF = 2;
-        break;
-    case JointType::SPHERE:
-        _S_Body.setZero(6, 3);
-        _S_Body
-            << 1, 0, 0,
-            0, 1, 0,
-            0, 0, 1,
-            0, 0, 0,
-            0, 0, 0,
-            0, 0, 0;
-        _T_Body.setZero(6, 3);
-        _T_Body
-            << 0, 0, 0,
-            0, 0, 0,
-            0, 0, 0,
-            1, 0, 0,
-            0, 1, 0,
-            0, 0, 1;
-        _DOF = 3;
-    case JointType::FLOATING:
-        _S_Body.setIdentity(6, 6);
-        _T_Body.setZero(6, 6);
-        _DOF = 6;
+    // case JointType::PX:
+    //     _S_Body.setZero(6, 1);
+    //     _S_Body
+    //         << 0,  0, 0, 1, 0, 0;
+    //     _T_Body.setZero(6, 5);
+    //     _T_Body
+    //         << 1, 0, 0, 0, 0,
+    //         0, 1, 0, 0, 0,
+    //         0, 0, 1, 0, 0,
+    //         0, 0, 0, 0, 0,
+    //         0, 0, 0, 1, 0,
+    //         0, 0, 0, 0, 1;
+    //     _DOF = 1;
+    //     break;
+    // case JointType::PY:
+    //     _S_Body.setZero(6, 1);
+    //     _S_Body
+    //         << 0, 0, 0, 0, 1, 0;
+    //     _T_Body.setZero(6, 5);
+    //     _T_Body
+    //         << 1, 0, 0, 0, 0,
+    //         0, 1, 0, 0, 0,
+    //         0, 0, 1, 0, 0,
+    //         0, 0, 0, 1, 0,
+    //         0, 0, 0, 0, 0,
+    //         0, 0, 0, 0, 1;
+    //     _DOF = 1;
+    //     break;
+    // case JointType::PZ:
+    //     _S_Body.setZero(6, 1);
+    //     _S_Body
+    //         << 0, 0, 0, 0, 0, 1;
+    //     _T_Body.setZero(6, 5);
+    //     _T_Body
+    //         << 1, 0, 0, 0, 0,
+    //         0, 1, 0, 0, 0,
+    //         0, 0, 1, 0, 0,
+    //         0, 0, 0, 1, 0,
+    //         0, 0, 0, 0, 1,
+    //         0, 0, 0, 0, 0;
+    //     _DOF = 1;
+    //     break;
+    // case JointType::UXY:
+    //     _S_Body.setZero(6, 2);
+    //     _S_Body
+    //         << 1, 0,
+    //         0, 1,
+    //         0, 0,
+    //         0, 0,
+    //         0, 0,
+    //         0, 0;
+    //     _T_Body.setZero(6, 4);
+    //     _T_Body
+    //         << 0,  0, 0, 0,
+    //         0, 0, 0, 0,
+    //         1, 0, 0, 0,
+    //         0, 1, 0, 0,
+    //         0, 0, 1, 0,
+    //         0, 0, 0, 1;
+    //     _DOF = 2;
+    //     break;
+    // case JointType::UXZ:
+    //     _S_Body.setZero(6, 2);
+    //     _S_Body
+    //         << 1,  0,
+    //         0, 0,
+    //         0, 1,
+    //         0, 0,
+    //         0, 0,
+    //         0, 0;
+    //     _T_Body.setZero(6, 4);
+    //     _T_Body
+    //         << 0,  0, 0, 0,
+    //         1, 0, 0, 0,
+    //         0, 0, 0, 0,
+    //         0, 1, 0, 0,
+    //         0, 0, 1, 0,
+    //         0, 0, 0, 1;
+    //     _DOF = 2;
+    //     break;
+    // case JointType::UYZ:
+    //     _S_Body.setZero(6, 2);
+    //     _S_Body
+    //         << 0,  0,
+    //         1, 0,
+    //         0, 1,
+    //         0, 0,
+    //         0, 0,
+    //         0, 0;
+    //     _T_Body.setZero(6, 4);
+    //     _T_Body
+    //         << 1, 0, 0, 0,
+    //         0, 0, 0, 0,
+    //         0, 0, 0, 0,
+    //         0, 1, 0, 0,
+    //         0, 0, 1, 0,
+    //         0, 0, 0, 1;
+    //     _DOF = 2;
+    //     break;
+    // case JointType::SPHERE:
+    //     _S_Body.setZero(6, 3);
+    //     _S_Body
+    //         << 1, 0, 0,
+    //         0, 1, 0,
+    //         0, 0, 1,
+    //         0, 0, 0,
+    //         0, 0, 0,
+    //         0, 0, 0;
+    //     _T_Body.setZero(6, 3);
+    //     _T_Body
+    //         << 0, 0, 0,
+    //         0, 0, 0,
+    //         0, 0, 0,
+    //         1, 0, 0,
+    //         0, 1, 0,
+    //         0, 0, 1;
+    //     _DOF = 3;
+    // case JointType::FLOATING:
+    //     _S_Body.setIdentity(6, 6);
+    //     _T_Body.setZero(6, 6);
+    //     _DOF = 6;
     default:
         _S_Body.setZero(6, 1);
         _S_Body

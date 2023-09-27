@@ -15,8 +15,8 @@ public:
     void set_rpy_xyz(Mat3 rpy, Vec3 xyz);
 
     JointType _jtype;
-    MatX _S_Body;
-    MatX _T_Body;
+    Vec6 _S_Body;
+    Eigen::Matrix<double, 6, 5> _T_Body;
     double _DOF;
     Mat3 _rpyMat;
     Vec3 _xyz;
