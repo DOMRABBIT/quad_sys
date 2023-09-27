@@ -98,6 +98,14 @@ class Robot
         void Update_Model();
         MatX Cal_Jacobian(int ib, Coordiante frame);
         Mat4 Flt_Transform();
+        void set_q(double q[])
+        {
+            for (int i = 0; i < _NB;i++)
+            {
+                _q[i] = q[i];
+                // std::cout << i << ": " << _q[i] <<std::endl;
+            }
+        }
         // bool _isUpdate();
 
     private:

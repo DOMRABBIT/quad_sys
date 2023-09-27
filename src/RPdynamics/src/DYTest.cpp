@@ -18,22 +18,22 @@ int main(int argc, char *argv[])
 
     a1Robot *a1 = new a1Robot();
     Dynamics *dy = new Dynamics(a1);
+    // cout << a1->_q[0] << endl;
+    // cout << a1->_q[0] << endl;
+    // cout << dy->_q[0] << endl;
 
-    cout << a1->_q[0] << endl;
-    cout << dy->_q[0] << endl;
 
+    double q[12] = {0.5f, 0.2f, 0.0f, 0.1f, 0.0f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    a1->set_q(q);
 
-    double q[12] = {0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-    for (int i = 0; i < a1->_NB; i++)
-        a1->_q[i] = q[i];
-
-    a1->Update_Model();
+    // cout << a1->_q[0] << endl;
 
     while (ros::ok())
     {
+        a1->Update_Model();
         show_model_in_rviz(a1, marker_pub);
 
-
+        
         a1->_isUpdated = false;
         r.sleep();
     }

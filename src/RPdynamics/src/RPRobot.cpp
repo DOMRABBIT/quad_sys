@@ -34,8 +34,8 @@ Robot::Robot(int NB, int NL)
         T_uptree[i] = Mat4::Identity(4, 4);
         Tj[i] = Mat4::Identity(4, 4);
         Tq[i] = Mat4::Identity(4, 4);
-        _q[i] = 0;
-        _dq[i] = 0;
+        // _q[i] = 0;
+        // _dq[i] = 0;
     }
 
     for (int i = 0; i < NL; i++)
@@ -128,6 +128,7 @@ void Robot::Update_Model()
             {
                 Xq[i] = rotx(_q[i]); // X_down
                 Tq[i] = rox(_q[i]);  // T_down
+                std::cout << i << ": " << _q[i] << std::endl;
             }
             else if (_joint[i]._jtype == JointType::RY)
             {
@@ -391,7 +392,7 @@ void a1Robot::build_a1()
         AdjointT(_lpjoint[i].Tp, _lpjoint[i].Xp);
     }
 
-    Update_Model();
+    // Update_Model();
     std::cout
         << std::endl
         << "Model building completed! NB = " << _NB << " NL = " << _NL << std::endl;
