@@ -7,13 +7,13 @@ enum class JointType
     RX,
     RY,
     RZ,
-    PX,
-    PY,
-    PZ,
-    UXY,
-    UXZ,
-    UYZ,
-    SPHERE
+    // PX,
+    // PY,
+    // PZ,
+    // UXY,
+    // UXZ,
+    // UYZ,
+    // SPHERE
 };
 
 enum class Index

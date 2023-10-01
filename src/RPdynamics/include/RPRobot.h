@@ -21,6 +21,13 @@ public:
     Mat4 Ts; // loop joint's frame represent to successor link's frame
     MatX T;  // constrian force space represent at loop joint frame
 
+    Mat4 Tp_1; 
+    Mat4 Ts_1; 
+    Mat6 Xp_1;
+    Mat6 Xs_1;
+
+    MatX T_lp;
+
     int _suc;
     int _pre;
 
@@ -103,6 +110,14 @@ class Robot
             for (int i = 0; i < _NB;i++)
             {
                 _q[i] = q[i];
+                // std::cout << i << ": " << _q[i] <<std::endl;
+            }
+        }
+        void set_quaxyz(double q[])
+        {
+            for (int i = 0; i < 7; i++)
+            {
+                _quat_xyz[i] = q[i];
                 // std::cout << i << ": " << _q[i] <<std::endl;
             }
         }

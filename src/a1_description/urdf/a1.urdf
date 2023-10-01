@@ -302,12 +302,12 @@
             <child link="base"/>
         </joint>
     </xacro:if>  -->
-  <!-- <link name="world"/>
+  <link name="world"/>
   <joint name="base_static_joint" type="fixed">
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <parent link="world"/>
       <child link="base"/>
-  </joint> -->
+  </joint>
 
   <link name="base">
     <visual>
@@ -415,7 +415,7 @@
     <child link="FR_thigh"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0.01" friction="0.2"/>
-    <limit effort="33.5" lower="-1.0471975512" upper="4.18879020479" velocity="21"/>
+    <limit effort="33.5" lower="-3" upper="4.18879020479" velocity="21"/>
   </joint>
   <link name="FR_thigh">
     <visual>
@@ -443,7 +443,7 @@
     <child link="FR_calf"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0.01" friction="0.2"/>
-    <limit effort="33.5" lower="-2.69653369433" upper="-0.916297857297" velocity="21"/>
+    <limit effort="33.5" lower="-3.69653369433" upper="3" velocity="21"/>
   </joint>
   <link name="FR_calf">
     <visual>
@@ -486,7 +486,7 @@
     </collision>
     <inertial>
       <mass value="0.00"/>
-      <inertia ixx="9.6e-06" ixy="0.0" ixz="0.0" iyy="9.6e-06" iyz="0.0" izz="9.6e-06"/>
+      <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
     </inertial>
   </link>
   <transmission name="FR_hip_tran">
@@ -525,7 +525,7 @@
     <child link="FL_hip"/>
     <axis xyz="1 0 0"/>
     <dynamics damping="0.01" friction="0.2"/>
-    <limit effort="33.5" lower="-0.802851455917" upper="0.802851455917" velocity="21"/>
+    <limit effort="33.5" lower="-3" upper="3" velocity="21"/>
   </joint>
   <link name="FL_hip">
     <visual>
@@ -567,7 +567,7 @@
     <child link="FL_thigh"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0.01" friction="0.2"/>
-    <limit effort="33.5" lower="-1.0471975512" upper="4.18879020479" velocity="21"/>
+    <limit effort="33.5" lower="-3" upper="4.18879020479" velocity="21"/>
   </joint>
   <link name="FL_thigh">
     <visual>
@@ -595,7 +595,7 @@
     <child link="FL_calf"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0.01" friction="0.2"/>
-    <limit effort="33.5" lower="-2.69653369433" upper="-0.916297857297" velocity="21"/>
+    <limit effort="33.5" lower="-3" upper="4" velocity="21"/>
   </joint>
   <link name="FL_calf">
     <visual>
@@ -638,7 +638,7 @@
     </collision>
     <inertial>
       <mass value="0.00"/>
-      <inertia ixx="9.6e-06" ixy="0.0" ixz="0.0" iyy="9.6e-06" iyz="0.0" izz="9.6e-06"/>
+      <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
     </inertial>
   </link>
   <transmission name="FL_hip_tran">
@@ -677,7 +677,7 @@
     <child link="RR_hip"/>
     <axis xyz="1 0 0"/>
     <dynamics damping="0.01" friction="0.2"/>
-    <limit effort="33.5" lower="-0.802851455917" upper="0.802851455917" velocity="21"/>
+    <limit effort="33.5" lower="-3" upper="3" velocity="21"/>
   </joint>
   <link name="RR_hip">
     <visual>
@@ -719,7 +719,7 @@
     <child link="RR_thigh"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0.01" friction="0.2"/>
-    <limit effort="33.5" lower="-1.0471975512" upper="4.18879020479" velocity="21"/>
+    <limit effort="33.5" lower="-3" upper="4.18879020479" velocity="21"/>
   </joint>
   <link name="RR_thigh">
     <visual>
@@ -747,7 +747,7 @@
     <child link="RR_calf"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0.01" friction="0.2"/>
-    <limit effort="33.5" lower="-2.69653369433" upper="-0.916297857297" velocity="21"/>
+    <limit effort="33.5" lower="-3" upper="4" velocity="21"/>
   </joint>
   <link name="RR_calf">
     <visual>
@@ -790,7 +790,7 @@
     </collision>
     <inertial>
       <mass value="0.00"/>
-      <inertia ixx="9.6e-06" ixy="0.0" ixz="0.0" iyy="9.6e-06" iyz="0.0" izz="9.6e-06"/>
+      <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
     </inertial>
   </link>
   <transmission name="RR_hip_tran">
@@ -829,7 +829,7 @@
     <child link="RL_hip"/>
     <axis xyz="1 0 0"/>
     <dynamics damping="0.01" friction="0.2"/>
-    <limit effort="33.5" lower="-0.802851455917" upper="0.802851455917" velocity="21"/>
+    <limit effort="33.5" lower="-3" upper="3" velocity="21"/>
   </joint>
   <link name="RL_hip">
     <visual>
@@ -871,7 +871,7 @@
     <child link="RL_thigh"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0.01" friction="0.2"/>
-    <limit effort="33.5" lower="-1.0471975512" upper="4.18879020479" velocity="21"/>
+    <limit effort="33.5" lower="-3" upper="4.18879020479" velocity="21"/>
   </joint>
   <link name="RL_thigh">
     <visual>
@@ -899,7 +899,7 @@
     <child link="RL_calf"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0.01" friction="0.2"/>
-    <limit effort="33.5" lower="-2.69653369433" upper="-0.916297857297" velocity="21"/>
+    <limit effort="33.5" lower="-3" upper="4" velocity="21"/>
   </joint>
   <link name="RL_calf">
     <visual>
@@ -942,7 +942,7 @@
     </collision>
     <inertial>
       <mass value="0.00"/>
-      <inertia ixx="9.6e-06" ixy="0.0" ixz="0.0" iyy="9.6e-06" iyz="0.0" izz="9.6e-06"/>
+      <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
     </inertial>
   </link>
   <transmission name="RL_hip_tran">

@@ -43,8 +43,21 @@ class Dynamics
         _X_dwtree = _robot->X_dwtree;
         _X_uptree = _robot->X_uptree;
     }
-    MatX inverse_dynamic_FixedBase(double _qdd[],
+    MatX inverse_dynamic_FixedBase(double _ddq[],
                                    bool Gra_offset);
+    MatX inverse_dynamic_Flt(double _qdd[],
+                             bool Gra_offset);
+
+    MatX Cal_Generalize_Inertial_Matrix_RNEA(MatX Bias_force);
+    MatX Cal_Generalize_Inertial_Matrix_CRBA();
+    MatX Cal_Generalize_Inertial_Matrix_CRBA_Flt(MatX &H_fl,
+                                            MatX &F,
+                                            Mat6 &I_flbase);
+    MatX Cal_Generalize_Bias_force(bool Gra_offset);
+    MatX Cal_Generalize_Bias_force_Flt(bool Gra_offset);
+    MatX Cal_Gravity_Term();
+    MatX Cal_Geometric_Jacobain(int ib, Coordiante coordinate);
+    MatX Cal_K_Flt(MatX &k);
 
     a1Robot *_robot;
     double *_q;
@@ -57,6 +70,9 @@ class Dynamics
     Vec6 *_a;
     Vec6 *_avp;
     Vec6 *_f;
+
+    Vec6 _v_base; // velocity of base in world coordinate
+    Vec6 _a_base; // acceleration of base in world coordinate
 
     Vec6 _gra;
     int _NB, _NL;

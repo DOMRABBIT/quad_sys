@@ -128,7 +128,6 @@ void Robot::Update_Model()
             {
                 Xq[i] = rotx(_q[i]); // X_down
                 Tq[i] = rox(_q[i]);  // T_down
-                std::cout << i << ": " << _q[i] << std::endl;
             }
             else if (_joint[i]._jtype == JointType::RY)
             {
@@ -385,11 +384,25 @@ void a1Robot::build_a1()
     for (int i = 0; i < _NL; i++)
     {
         _lpjoint[i]._pre = WORLD;
-        _lpjoint[i].set_type(JointType::SPHERE);
+        _lpjoint[i].T.setZero(6, 3);
+        _lpjoint[i].T << 0, 0, 0,
+                            0, 0, 0,
+                            0, 0, 0,
+                            1, 0, 0,
+                            0, 1, 0,
+                            0, 0, 1;
+        _lpjoint[i]._DOF = 3;
         Rp2T(rpy_lp, xyz_lp, _lpjoint[i].Ts);
         AdjointT(_lpjoint[i].Ts, _lpjoint[i].Xs);
+        Mat3 R_t = rpy_lp.transpose();
+        Vec3 xyz_t = (-R_t) * xyz_lp;
+        Rp2T(R_t, xyz_t, _lpjoint[i].Ts_1);
+        AdjointT(_lpjoint[i].Ts_1, _lpjoint[i].Xs_1);
+
         Rp2T(Mat3::Identity(), Vec3::Zero(), _lpjoint[i].Tp);
+        Rp2T(Mat3::Identity(), Vec3::Zero(), _lpjoint[i].Tp_1);
         AdjointT(_lpjoint[i].Tp, _lpjoint[i].Xp);
+        AdjointT(_lpjoint[i].Tp_1, _lpjoint[i].Xp_1);
     }
 
     // Update_Model();
