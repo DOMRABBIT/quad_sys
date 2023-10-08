@@ -12,6 +12,8 @@
 #include <string>
 #include "sensor_msgs/JointState.h"
 #include <iomanip>
+#include <csignal>
+#include <sched.h>
 
 using namespace std;
 
@@ -34,6 +36,9 @@ ros::Subscriber servo_sub[12], imu_sub;
 ros::Publisher servo_pub[12];
 float tau_[12];
 double q[12] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+double dq[12] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+
+bool running = true;
 
 void show_model_in_rviz(Robot *rb, ros::Publisher &marker_pub);
 
@@ -168,11 +173,29 @@ void sendCmd()
     ros::spinOnce();
 }
 
+void setProcessScheduler()
+{
+    pid_t pid = getpid();
+    sched_param param;
+    param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+    if (sched_setscheduler(pid, SCHED_FIFO, &param) == -1)
+    {
+        std::cout << "[ERROR] Function setProcessScheduler failed." << std::endl;
+    }
+}
+
+void ShutDown(int sig)
+{
+    std::cout << "stop the controller" << std::endl;
+    running = false;
+}
+
 int main(int argc, char *argv[])
 {
+    setProcessScheduler();
     ros::init(argc, argv, "dynamic_test");
     ros::NodeHandle nm;
-    ros::Rate r(1000);
+    ros::Rate r(500);
     ros::Publisher marker_pub = nm.advertise<visualization_msgs::Marker>("visualization_marker", 1);
 
     imu_sub = nm.subscribe("/trunk_imu", 1, imuCallback);
@@ -206,27 +229,47 @@ int main(int argc, char *argv[])
     a1Robot *a1 = new a1Robot();
     Dynamics *dy = new Dynamics(a1);
 
-    a1->Update_Model();
+    // a1->Update_Model();
     double qdd[12] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
     double quaxyz[7] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-
+    double qdd18[18] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    double v_base[6] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    MatX qdd18v = Eigen::Map<MatX>(qdd18, 18, 1);
     MatX tau;
-
+    tau.setZero(12, 1);
     // cout << a1->_q[0] << endl;
-
-    while (ros::ok())
+    signal(SIGINT, ShutDown);
+    while (ros::ok() && running)
     {
         for (int i = 0; i < 12;i++)
         {
             q[i] = _lowState.motorState[i].q;
-            dy->_dq[i] = _lowState.motorState[i].dq;
-            cout << "dq: " << dy->_dq[i] << " ";
+            dq[i] = _lowState.motorState[i].dq;
         }
-        cout << endl;
         a1->set_q(q);
+        a1->set_dq(dq);
         a1->set_quaxyz(quaxyz);
+        a1->set_vbase(v_base);
         a1->Update_Model();
         tau = dy->inverse_dynamic_FixedBase(qdd, true);
+        Eigen::MatrixXd K, k, C, H_RNEA, H_CRBA, H_FLT, H_fl,C_FLT;
+        K = dy->Cal_K_Flt(k);
+        Eigen::Matrix<double, 12, 1> lenda;
+        lenda << 0, 0, 33.5, 0, 0, 33.5, 0, 0, 33.5, 0, 0, 33.5;
+        a1->Update_Model();
+        C = dy->Cal_Generalize_Bias_force(true);
+        H_RNEA = dy->Cal_Generalize_Inertial_Matrix_RNEA(C);
+        H_CRBA = dy->Cal_Generalize_Inertial_Matrix_CRBA();
+        H_FLT = dy->Cal_Generalize_Inertial_Matrix_CRBA_Flt(H_fl);
+        C_FLT = dy->Cal_Generalize_Bias_force_Flt(true);
+        // cout
+        //     << H_FLT * qdd18v + C_FLT << endl
+        //     << endl;
+        // for (int i = 0; i < a1->_NB; i++)
+        // {
+        //     std::cout << a1->X_dwtree[i] << endl;
+        // }
+        cout << K.transpose() * lenda << endl << endl;
         // show_model_in_rviz(a1, marker_pub);
         // cout << tau.transpose() << endl;
         for (int i(0); i < 12; ++i)
@@ -235,8 +278,8 @@ int main(int argc, char *argv[])
             _lowCmd.motorCmd[i].q = 0;
             _lowCmd.motorCmd[i].dq = 0;
             _lowCmd.motorCmd[i].tau = tau(i);
-            _lowCmd.motorCmd[i].Kd = 0;
-            _lowCmd.motorCmd[i].Kp = 0;
+            _lowCmd.motorCmd[i].Kd = 2;
+            _lowCmd.motorCmd[i].Kp = 2;
         }
         for (int m(0); m < 12; ++m)
         {
@@ -248,6 +291,10 @@ int main(int argc, char *argv[])
         r.sleep();
         
     }
+
+    delete dy;
+    delete a1;
+    
 
     return 0;
 

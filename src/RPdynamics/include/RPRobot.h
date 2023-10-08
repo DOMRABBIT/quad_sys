@@ -86,7 +86,7 @@ class Robot
         Joint* _joint;
         LoopJoint *_lpjoint;
         double _quat_xyz[7];
-
+        Vec6 _v_base;
         double *_q;
         double *_dq;
 
@@ -113,11 +113,27 @@ class Robot
                 // std::cout << i << ": " << _q[i] <<std::endl;
             }
         }
+        void set_dq(double dq[])
+        {
+            for (int i = 0; i < _NB; i++)
+            {
+                _dq[i] = dq[i];
+                // std::cout << i << ": " << _q[i] <<std::endl;
+            }
+        }
         void set_quaxyz(double q[])
         {
             for (int i = 0; i < 7; i++)
             {
                 _quat_xyz[i] = q[i];
+                // std::cout << i << ": " << _q[i] <<std::endl;
+            }
+        }
+        void set_vbase(double v[])
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                _v_base(i) = v[i];
                 // std::cout << i << ": " << _q[i] <<std::endl;
             }
         }

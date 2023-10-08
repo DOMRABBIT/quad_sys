@@ -98,8 +98,10 @@ Robot::Robot(int NB)
 
 void Robot::Update_Model()
 {
-    if (!_isUpdated)
+
+    if (!_isUpdated) //1
     {
+        // std::cout << "update!!!" << std::endl;
         if (_base->get_BaseType() == BaseType::Floating)
         {
             Mat4 T = Flt_Transform();
@@ -145,7 +147,7 @@ void Robot::Update_Model()
             Rp2T(R, xyz, T_uptree[i]);
             AdjointT(T_uptree[i], X_uptree[i]);
             // std::cout << i << ": " << std::endl
-            //           << T_dwtree[i] << std::endl;
+            //           << X_dwtree[i] << std::endl;
         }
     }
         
@@ -370,6 +372,7 @@ void a1Robot::build_a1()
         _joint[i].set_rpy_xyz(_urdf->_urjoint[i]->_rpyMat,
                              _urdf->_urjoint[i]->_xyz);
         Rp2T(_joint[i]._rpyMat, _joint[i]._xyz, Tj[i]);
+        AdjointT(Tj[i], Xj[i]);
         _q[i] = 0.0;
         Tq[i] = roz(_q[i]);
         T_dwtree[i] = Tj[i] * Tq[i];
@@ -404,6 +407,10 @@ void a1Robot::build_a1()
         AdjointT(_lpjoint[i].Tp, _lpjoint[i].Xp);
         AdjointT(_lpjoint[i].Tp_1, _lpjoint[i].Xp_1);
     }
+    _lpjoint[0]._suc = 2;
+    _lpjoint[1]._suc = 5;
+    _lpjoint[2]._suc = 8;
+    _lpjoint[3]._suc = 11;
 
     // Update_Model();
     std::cout

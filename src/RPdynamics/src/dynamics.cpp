@@ -80,7 +80,7 @@ MatX Dynamics::inverse_dynamic_Flt(double _ddq[],
     g = _base->_fltjoint->_X_Wrd2Base * g;
     // 在floating base坐标系下表示v_base
     Vec6 v_base;
-    v_base = _base->_fltjoint->_X_Wrd2Base * _v_base;
+    v_base = _base->_fltjoint->_X_Wrd2Base * _robot -> _v_base;
 
     Mat6 IC_base = _robot->_base->_rbi;
     Vec6 f0 = IC_base * (-g) + crf(v_base) * IC_base * v_base;
@@ -142,6 +142,7 @@ MatX Dynamics::inverse_dynamic_Flt(double _ddq[],
 // Gra_offset: if true, then caluate product tau contain the gravity term; if false, vice verse
 MatX Dynamics::Cal_Generalize_Inertial_Matrix_RNEA(MatX Bias_force)
 {
+    _robot->Update_Model();
     MatX H;
     MatX v;
     MatX a;
@@ -169,6 +170,7 @@ MatX Dynamics::Cal_Generalize_Inertial_Matrix_RNEA(MatX Bias_force)
 //        mostly attain from state estimator or just differented by q
 MatX Dynamics::Cal_Generalize_Inertial_Matrix_CRBA()
 {
+    _robot->Update_Model();
     // intialize H
     MatX H;
     H.setZero(_NB, _NB);
@@ -210,10 +212,9 @@ MatX Dynamics::Cal_Generalize_Inertial_Matrix_CRBA()
 // model: The robot model which must been created
 //   q[]: The robot's joint value array, which size is concide with NB
 //        mostly attain from state estimator or just differented by q
-MatX Dynamics::Cal_Generalize_Inertial_Matrix_CRBA_Flt(MatX &H_fl,
-                                                        MatX &F,
-                                                        Mat6 &I_flbase)
+MatX Dynamics::Cal_Generalize_Inertial_Matrix_CRBA_Flt(MatX &H_fl)
 {
+    _robot->Update_Model();
     // intialize H
     Eigen::MatrixXd H;
     H.setZero(_NB, _NB);
@@ -255,6 +256,8 @@ MatX Dynamics::Cal_Generalize_Inertial_Matrix_CRBA_Flt(MatX &H_fl,
         fh[i] = _X_uptree[j].transpose() * fh[i];
     }
     // Eigen::MatrixXd F;
+    MatX F;
+    Mat6 I_flbase;
     F.setZero(6, _NB);
     for (int i = 0; i < _NB; i++)
     {
@@ -320,7 +323,7 @@ MatX Dynamics::Cal_Generalize_Bias_force_Flt(bool Gra_offset)
     g = _base->_fltjoint->_X_Wrd2Base * g;
     // 在floating base坐标系下表示v_base
     Vec6 v_base;
-    v_base = _base->_fltjoint->_X_Wrd2Base * _v_base;
+    v_base = _base->_fltjoint->_X_Wrd2Base * _robot -> _v_base;
 
     // forward pass, velocity and acceleration propagation
     for (int i = 0; i < _NB; i++)
@@ -367,6 +370,7 @@ MatX Dynamics::Cal_Generalize_Bias_force_Flt(bool Gra_offset)
 //   q[]: The robot's joint value array, which size is concide with NB
 MatX Dynamics::Cal_Gravity_Term()
 {
+    _robot->Update_Model();
     MatX Gravity_Term;
     MatX v;
     MatX a;
@@ -390,6 +394,7 @@ MatX Dynamics::Cal_Gravity_Term()
 //             if choose BODY_COORDINATE, then will calculte body Jacobian
 MatX Dynamics::Cal_Geometric_Jacobain(int ib, Coordiante coordinate)
 {
+    _robot->Update_Model();
     MatX J;
     J.setZero(6, _NB); // initialize Jacobian matrix
 
