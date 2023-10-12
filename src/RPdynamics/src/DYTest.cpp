@@ -254,6 +254,8 @@ int main(int argc, char *argv[])
         tau = dy->inverse_dynamic_FixedBase(qdd, true);
         Eigen::MatrixXd K, k, C, H_RNEA, H_CRBA, H_FLT, H_fl,C_FLT;
         K = dy->Cal_K_Flt(k);
+        Eigen::FullPivLU<MatX> lu(K);
+        MatX G = lu.kernel();
         Eigen::Matrix<double, 12, 1> lenda;
         lenda << 0, 0, 33.5, 0, 0, 33.5, 0, 0, 33.5, 0, 0, 33.5;
         a1->Update_Model();
@@ -269,7 +271,8 @@ int main(int argc, char *argv[])
         // {
         //     std::cout << a1->X_dwtree[i] << endl;
         // }
-        cout << K.transpose() * lenda << endl << endl;
+        cout << k.rows() << endl
+             << endl;
         // show_model_in_rviz(a1, marker_pub);
         // cout << tau.transpose() << endl;
         for (int i(0); i < 12; ++i)

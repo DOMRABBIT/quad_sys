@@ -209,6 +209,8 @@ void State_Trotting::calcTau()
     }
 
     _forceFeetBody = _G2B_RotMat * _forceFeetGlobal;
+    std::cout << "force: " << std::endl
+              << _forceFeetBody << std::endl;
     _q = vec34ToVec12(_lowState->getQ());
     _tau = _robModel->getTau(_q, _forceFeetBody);
 }
