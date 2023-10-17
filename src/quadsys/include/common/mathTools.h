@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <iostream>
-#include "common/mathTypes.h"
+#include "MathType.h"
 
 template <typename T1, typename T2>
 inline T1 max(const T1 a, const T2 b)

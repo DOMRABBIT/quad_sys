@@ -68,6 +68,7 @@ if(CATKIN_MAKE)
         tf
         geometry_msgs
         unitree_legged_msgs
+        RPdynamics
     )
     catkin_package(
         CATKIN_DEPENDS 

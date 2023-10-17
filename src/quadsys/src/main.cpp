@@ -9,6 +9,7 @@
 #include "control/CtrlComponents.h"
 #include "gait/WaveGenerator.h"
 #include "control/BalanceCtrl.h"
+#include "wbc_controller/wbc_controller.h"
 
 // #define COMPILE_WITH_SIMULATION
 

@@ -122,7 +122,6 @@ file(GLOB_RECURSE SRC_LIST
 )
 
 add_executable(RPdynamics_node src/DYTest.cpp ${SRC_LIST}
-                                    src/Build_A1.cpp
                                     src/visual_rviz.cpp
                                     src/dynamics.cpp)
 if(CATKIN_MAKE)
@@ -151,12 +150,11 @@ if(NOT CATKIN_MAKE)
 endif()
 
 
-## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/RPdynamics_node.cpp
-#   src/Build_A1.cpp
-#   ${SRC_LIST}
-# )
+# Declare a C++ library
+add_library(${PROJECT_NAME}
+  src/dynamics.cpp
+  ${SRC_LIST}
+)
 
 
 #############

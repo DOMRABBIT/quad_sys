@@ -155,7 +155,9 @@ class a1Robot : public Robot
                       << "time stamp: " << _systick << std::endl;
         }
         urdfData *_urdf;
+        Vec34 _endPfoot;
 
+        void update_footEnd();
         void witre_urdfData();
         void build_a1();
 

@@ -1,7 +1,7 @@
 #ifndef UNITREELEG_H
 #define UNITREELEG_H
 
-#include "common/mathTypes.h"
+#include "MathType.h"
 #include "common/enumClass.h"
 
 class QuadrupedLeg

@@ -13,7 +13,7 @@ Mat6 xlt(Vec3 r)
     return X;
 }
 
-Mat6 rotx(double theta)
+Mat6 Xrotx(double theta)
 {
     Mat6 X;
 
@@ -30,7 +30,7 @@ Mat6 rotx(double theta)
     return X;
 }
 
-Mat6 roty(double theta)
+Mat6 Xroty(double theta)
 {
     Mat6 X;
 
@@ -47,7 +47,7 @@ Mat6 roty(double theta)
     return X;
 }
 
-Mat6 rotz(double theta)
+Mat6 Xrotz(double theta)
 {
     Mat6 X;
 

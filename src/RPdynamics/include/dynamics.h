@@ -34,6 +34,11 @@ class Dynamics
         _lpjoint = robot->_lpjoint;
 
         _quat_xyz = robot->_quat_xyz;
+
+        for (int i = 0; i < 4;i++)
+        {
+            _ref_R_s[i].setIdentity(3,3);
+        }
     }
     ~Dynamics(){}
 
@@ -61,6 +66,8 @@ class Dynamics
     double *_q;
     double *_dq;
 
+    Mat3 _ref_R_s[4];
+
     Mat6 *_X_dwtree; // body(i) coordinate respect to body(i-1) coordinate
     Mat6 *_X_uptree; // body(i-1) coordinate respect to body(i) coordinate
 
@@ -81,6 +88,8 @@ class Dynamics
     double *_quat_xyz;
     int *_parent;
 
+    Mat6 _ref_X_s;
+    Mat6 _ref_X_p;
 
 private:
 

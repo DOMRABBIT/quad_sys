@@ -437,6 +437,18 @@ MatX Dynamics::Cal_Geometric_Jacobain(int ib, Coordiante coordinate)
             J.block(0, k[i - 1], 6, 1) = X_up * _joint[k[i - 1]]._S_Body;
         }
     }
+    else if (coordinate == Coordiante::INERTIAL)
+    {
+        Mat6 X_up;
+        X_up.setIdentity(6, 6);
+        J.block(0, k[num - 1], 6, 1) = _joint[k[num - 1]]._S_Body;
+        for (int i = num - 1; i > 0; --i)
+        {
+            X_up = X_up * _X_uptree[i];
+            J.block(0, k[i - 1], 6, 1) = X_up * _joint[k[i - 1]]._S_Body;
+        }
+        J = _robot->_base->_fltjoint->_X_Base2Wrd * J;
+    }
     return J;
 }
 
@@ -502,6 +514,7 @@ MatX Dynamics::Cal_K_Flt(MatX &k)
         }
         s_X_ref = X_up * _base->_fltjoint->_X_Wrd2Base;
         lps_X_ref = _lpjoint[nl].Xs_1 * s_X_ref;
+        _ref_R_s[nl] = s_X_ref.block(0, 0, 3, 3).transpose();
         //------------------------------------------
         int *kp_set, *kp_temp;
         kp_set = new int[_NB];
@@ -541,6 +554,7 @@ MatX Dynamics::Cal_K_Flt(MatX &k)
             K.block(row_index, 6 + ks_set[i], nc[nl], 1) = T_ref.transpose() * X_down * _joint[ks_set[i]]._S_Body;
         }
         ref_X_s = _robot->_base->_fltjoint->_X_Base2Wrd * X_down;
+        _ref_X_s = ref_X_s;
         X_down.setIdentity(6, 6);
         for (int i = 0; i < num_kp; i++)
         {
@@ -548,6 +562,7 @@ MatX Dynamics::Cal_K_Flt(MatX &k)
             K.block(row_index, 6 + kp_set[i], nc[nl], 1) = T_ref.transpose() * X_down * _joint[kp_set[i]]._S_Body;
         }
         ref_X_p = _robot->_base->_fltjoint->_X_Base2Wrd * X_down;
+        _ref_X_p = ref_X_p;
         if (_lpjoint[nl]._pre == WORLD)
         {
             vp.setZero(6, 1);

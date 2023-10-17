@@ -193,6 +193,8 @@ void ShutDown(int sig)
 int main(int argc, char *argv[])
 {
     setProcessScheduler();
+    /* set the print format */
+    std::cout << std::fixed << std::setprecision(3);
     ros::init(argc, argv, "dynamic_test");
     ros::NodeHandle nm;
     ros::Rate r(500);
@@ -231,6 +233,7 @@ int main(int argc, char *argv[])
 
     // a1->Update_Model();
     double qdd[12] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    double q_desire[12] = {0.2f, 0.5f, -1.0f, -0.2f, 0.5f, -1.0f, 0.2f, 0.5f, -1.0f, -0.2f, 0.5f, -1.0f};
     double quaxyz[7] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
     double qdd18[18] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
     double v_base[6] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
@@ -258,12 +261,27 @@ int main(int argc, char *argv[])
         MatX G = lu.kernel();
         Eigen::Matrix<double, 12, 1> lenda;
         lenda << 0, 0, 33.5, 0, 0, 33.5, 0, 0, 33.5, 0, 0, 33.5;
+        Eigen::Matrix<double, 3, 4> Ffoot;
+        for (int i = 0; i < 4; i++)
+        {
+            Ffoot.block(0, i, 3, 1) = dy->_ref_R_s[i] * lenda.segment(i * (3), 3);
+        }
         a1->Update_Model();
         C = dy->Cal_Generalize_Bias_force(true);
         H_RNEA = dy->Cal_Generalize_Inertial_Matrix_RNEA(C);
         H_CRBA = dy->Cal_Generalize_Inertial_Matrix_CRBA();
         H_FLT = dy->Cal_Generalize_Inertial_Matrix_CRBA_Flt(H_fl);
         C_FLT = dy->Cal_Generalize_Bias_force_Flt(true);
+        MatX tau_ext;
+        tau_ext.setZero(18, 1);
+        MatX jaco;
+        jaco = dy->Cal_Geometric_Jacobain(2,Coordiante::INERTIAL);
+        
+        // cout
+        //     << "Ffoot in world coordinate: " << endl;
+        // cout <<  Ffoot << endl;
+        // cout << "K: " << endl
+        //      << lenda.transpose() * K << endl;
         // cout
         //     << H_FLT * qdd18v + C_FLT << endl
         //     << endl;
@@ -271,18 +289,18 @@ int main(int argc, char *argv[])
         // {
         //     std::cout << a1->X_dwtree[i] << endl;
         // }
-        cout << k.rows() << endl
-             << endl;
+        // cout << k.rows() << endl
+        //      << endl;
         // show_model_in_rviz(a1, marker_pub);
         // cout << tau.transpose() << endl;
         for (int i(0); i < 12; ++i)
         {
             _lowCmd.motorCmd[i].mode = 10;
-            _lowCmd.motorCmd[i].q = 0;
+            _lowCmd.motorCmd[i].q = q_desire[i];
             _lowCmd.motorCmd[i].dq = 0;
             _lowCmd.motorCmd[i].tau = tau(i);
             _lowCmd.motorCmd[i].Kd = 2;
-            _lowCmd.motorCmd[i].Kp = 2;
+            _lowCmd.motorCmd[i].Kp = 20;
         }
         for (int m(0); m < 12; ++m)
         {

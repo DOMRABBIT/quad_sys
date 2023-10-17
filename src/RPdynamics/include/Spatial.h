@@ -6,9 +6,9 @@
 #include "MathType.h" 
 
 Mat6 xlt(Vec3 r);
-Mat6 rotx(double theta);
-Mat6 roty(double theta);
-Mat6 rotz(double theta);
+Mat6 Xrotx(double theta);
+Mat6 Xroty(double theta);
+Mat6 Xrotz(double theta);
 Mat6 rotR(Mat3 R);
 Mat4 Rp2T(Mat3 R, Vec3 p);
 Mat4 rox(double theta);

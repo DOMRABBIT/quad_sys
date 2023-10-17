@@ -1,8 +1,8 @@
 #ifndef WAVEGENERATOR_H
 #define WAVEGENERATOR_H
 
-#include "common/mathTypes.h"
-#include "common/timeMarker.h"
+#include "MathType.h"
+#include "TimeCounter.h"
 #include "common/enumClass.h"
 #include <unistd.h>
 

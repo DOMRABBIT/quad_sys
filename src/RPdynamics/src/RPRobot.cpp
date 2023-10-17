@@ -123,17 +123,17 @@ void Robot::Update_Model()
         {
             if (_joint[i]._jtype == JointType::RZ)
             {
-                Xq[i] = rotz(_q[i]); // X_down
+                Xq[i] = Xrotz(_q[i]); // X_down
                 Tq[i] = roz(_q[i]);  // T_down
             }
             else if (_joint[i]._jtype == JointType::RX)
             {
-                Xq[i] = rotx(_q[i]); // X_down
+                Xq[i] = Xrotx(_q[i]); // X_down
                 Tq[i] = rox(_q[i]);  // T_down
             }
             else if (_joint[i]._jtype == JointType::RY)
             {
-                Xq[i] = roty(_q[i]); // X_down
+                Xq[i] = Xroty(_q[i]); // X_down
                 Tq[i] = roy(_q[i]);  // T_down
             }
 
@@ -152,6 +152,26 @@ void Robot::Update_Model()
     }
         
     _isUpdated = true;
+}
+
+void a1Robot::update_footEnd()
+{
+    Mat4 qicifoot_temp;
+    Mat4 qicimat_temp;
+    qicimat_temp = T_dwtree[0] * T_dwtree[1] * T_dwtree[2] * _lpjoint[0].Ts;
+    qicifoot_temp.block(0, 0, 4, 1) = qicimat_temp.block(0, 3, 4, 1);
+
+    qicimat_temp = T_dwtree[3] * T_dwtree[4] * T_dwtree[5] * _lpjoint[1].Ts;
+    qicifoot_temp.block(0, 1, 4, 1) = qicimat_temp.block(0, 3, 4, 1);
+
+    qicimat_temp = T_dwtree[6] * T_dwtree[7] * T_dwtree[8] * _lpjoint[2].Ts;
+    qicifoot_temp.block(0, 2, 4, 1) = qicimat_temp.block(0, 3, 4, 1);
+
+    qicimat_temp = T_dwtree[9] * T_dwtree[10] * T_dwtree[11] * _lpjoint[3].Ts;
+    qicifoot_temp.block(0, 3, 4, 1) = qicimat_temp.block(0, 3, 4, 1);
+
+    qicifoot_temp = _base->_fltjoint->_T_Base2Wrd * qicifoot_temp;
+    _endPfoot = qicifoot_temp.block(0, 0, 3, 4);
 }
 
 MatX Robot::Cal_Jacobian(int ib, Coordiante frame)
