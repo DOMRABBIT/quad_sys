@@ -154,8 +154,6 @@ void WBC::torque_limit_task()
 void WBC::friction_cone_task(Vec4 contact)
 {
     MatX D, f;
-    D.setZero(5, 30);
-    f.setZero(5, 1);
     int row_index = 0;
     MatX B;
     MatX ref_R_s_ext;
@@ -167,11 +165,13 @@ void WBC::friction_cone_task(Vec4 contact)
             contact_num++;
         }
     }
-    B.setZero(5, 3 * contact_num);
+    D.setZero(5 * contact_num, 30);
+    f.setZero(5 * contact_num, 1);
+    B.setZero(5 * contact_num, 3 * contact_num);
     ref_R_s_ext.setIdentity(contact_num * 3, contact_num * 3);
     for (int i = 0; i < contact_num; i++)
     {
-        B.block(0, 3 * i, 5, 3) = _Ffri;
+        B.block(5 * i, 3 * i, 5, 3) = _Ffri;
     }
     for (int i = 0; i < 4; i++)
     {
@@ -188,10 +188,102 @@ void WBC::friction_cone_task(Vec4 contact)
     D_temp.block(0, 0, 18, 18) = _H;
     D_temp.block(0, 18, 18, 12) = -_S.transpose();
     MatX BRK_inv;
-    BRK_inv.setZero(5, 18);
+    BRK_inv.setZero(5 * contact_num, 18);
     BRK_inv = B * ref_R_s_ext * K_leftinv;
     D = BRK_inv * D_temp;
     f = BRK_inv * _C;
 
     _ineq_task = new ineq_Task(D, f);
+}
+
+void WBC::solve_HOproblem()
+{
+    MatX C_bar, d_bar, A_bar;
+    MatX b_bar;
+    C_bar.setIdentity(30, 30);
+    d_bar.setZero(30, 1);
+    b_bar.setZero(30, 1);
+    for (int i = 0; i < 7; i++)
+    {
+        A_bar = _eq_task[i]->_A * C_bar;
+        b_bar = _eq_task[i]->_b - _eq_task[i]->_A * d_bar;
+        solve_QProblem(A_bar, b_bar, _ineq_task->_D, _ineq_task->_f);
+        d_bar = d_bar + C_bar * _di;
+        Eigen::JacobiSVD<Eigen::MatrixXd> svd(A_bar);
+        if (svd.rank() >= A_bar.rows() || svd.rank() >= A_bar.cols())// if A_bar full rank
+        {
+            _qdd_torque = d_bar;
+        }
+        Eigen::FullPivLU<MatX> lu(b_bar);
+        MatX null_A = lu.kernel();
+        C_bar = C_bar * null_A;
+    }
+}
+
+void WBC::solve_QProblem(MatX A, MatX b, MatX D, MatX f)
+{
+    _G0 = A.transpose() * A;
+    _g0 = b.transpose() * A;
+    _CE.setZero(2, 30);
+    _ce0.setZero(2, 1);
+    _CI = D;
+    _ci0 = f;
+
+    int n = 30;
+    int m = 2;
+    int p = f.size();
+
+    G.resize(n, n);
+    CE.resize(n, m);
+    CI.resize(n, p);
+    g0.resize(n);
+    ce0.resize(m);
+    ci0.resize(p);
+    x.resize(n);
+
+    for (int i = 0; i < n; ++i)
+    {
+        for (int j = 0; j < n; ++j)
+        {
+            G[i][j] = _G0(i, j);
+        }
+    }
+
+    for (int i = 0; i < n; ++i)
+    {
+        for (int j = 0; j < m; ++j)
+        {
+            CE[i][j] = (_CE.transpose())(i, j);
+        }
+    }
+
+    for (int i = 0; i < n; ++i)
+    {
+        for (int j = 0; j < p; ++j)
+        {
+            CI[i][j] = (_CI.transpose())(i, j);
+        }
+    }
+
+    for (int i = 0; i < n; ++i)
+    {
+        g0[i] = _g0[i];
+    }
+
+    for (int i = 0; i < m; ++i)
+    {
+        ce0[i] = _ce0[i];
+    }
+
+    for (int i = 0; i < p; ++i)
+    {
+        ci0[i] = _ci0[i];
+    }
+
+    double value = solve_quadprog(G, g0, CE, ce0, CI, ci0, x);
+
+    for (int i = 0; i < n; ++i)
+    {
+        _di[i] = x[i];
+    }
 }

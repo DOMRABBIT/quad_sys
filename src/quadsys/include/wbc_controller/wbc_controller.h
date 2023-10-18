@@ -3,6 +3,7 @@
 
 #include "dynamics.h"
 #include "MathType.h"
+#include "thirdParty/quadProgpp/QuadProg++.hh"
 
 class eq_Task
 {
@@ -68,6 +69,15 @@ public:
     double _frition;
     Eigen::Matrix<double, 5, 3> _Ffri;
     Eigen::Matrix<double, 30, 1> _qdd_torque;
+    Eigen::Matrix<double, 30, 1> _di;
+
+    Eigen::Matrix<double, 30, 30> _G0;
+    Eigen::Matrix<double, 1, 30> _g0;
+    Eigen::MatrixXd _CE, _CI;
+    Eigen::VectorXd _ce0, _ci0;
+
+    quadprogpp::Matrix<double> G, CE, CI;
+    quadprogpp::Vector<double> g0, ce0, ci0, x;
 
     void dynamics_consistence_task(Vec4 contact);
     void closure_constrain_task();
@@ -77,6 +87,9 @@ public:
     void body_roll_pitch_task(double roll_acc, double pitch_acc);
     void torque_limit_task();
     void friction_cone_task(Vec4 contact);
+
+    void solve_HOproblem();
+    void solve_QProblem(MatX A, MatX b, MatX D, MatX f);
 
 private:
 };
