@@ -1,14 +1,32 @@
 #include "wbc_controller/wbc_controller.h"
 
-void WBC::dynamics_consistence_task()
+void WBC::dynamics_consistence_task(Vec4 contact)
 {
+    int contact_num = 0;
+    int row_index = 0;
+    MatX K_temp, k_temp;
     // calculate general inertial matrix
     _H = _dy->Cal_Generalize_Inertial_Matrix_CRBA_Flt(_H_fl);
     // calculate general bias force
     _C = _dy->Cal_Generalize_Bias_force_Flt(true);
     // calculate constrain matrix K and k
-    _K = _dy->Cal_K_Flt(_k);
-    //calculate nullspace matrix of K
+    K_temp = _dy->Cal_K_Flt(k_temp);
+    for (int i = 0; i < 4; i++)
+    {
+        contact_num++;
+    }
+    _K.setZero(contact_num * 3, 18);
+    _k.setZero(contact_num * 3, 1);
+    for (int i = 0; i < 4;i++)
+    {
+        if(contact(i) == 1)
+        {
+            _K.block(3 * row_index, 0, 3, 18) = K_temp.block(3 * i, 0, 3, 18);
+            _k.block(3 * row_index, 0, 3, 1) = k_temp.block(3 * i, 0, 3, 1);
+            row_index++;
+        }
+    }
+    // calculate nullspace matrix of K
     Eigen::FullPivLU<MatX> lu(_K);
     _G = lu.kernel();
 
@@ -85,7 +103,7 @@ void WBC::swing_foot_motion_task(Vec34 swing_acc,int swing_num)
         {
             PIMat.block(0, 0, 3, 3) = -px[i];
             _J_swingfoot.block(row_index * 3, 6 + 3 * i, 3, 3) = PIMat * _dy->Cal_Geometric_Jacobain(2+3*i, Coordiante::INERTIAL).block(0, 3 * i, 6, 3);
-            avp = _dy->_ref_X_s * _dy->_avp[2 + 3 * i];
+            avp = _dy->_ref_X_s[i] * _dy->_avp[2 + 3 * i];
             b.block(row_index * 3, 0, 3, 1) = swing_acc.block(0, i, 3, 1) - avp.block(3,0,3,1);
             row_index++;
         }
@@ -132,7 +150,48 @@ void WBC::torque_limit_task()
     _eq_task[6] = new eq_Task(A, b);
 }
 
-void WBC::friction_cone_task()
+// contact is the contact situation of four foot 1: contact 0: swing
+void WBC::friction_cone_task(Vec4 contact)
 {
-    
+    MatX D, f;
+    D.setZero(5, 30);
+    f.setZero(5, 1);
+    int row_index = 0;
+    MatX B;
+    MatX ref_R_s_ext;
+    int contact_num = 0;
+    for (int i = 0; i < 4; i++)
+    {
+        if(contact(i) == 1)
+        {
+            contact_num++;
+        }
+    }
+    B.setZero(5, 3 * contact_num);
+    ref_R_s_ext.setIdentity(contact_num * 3, contact_num * 3);
+    for (int i = 0; i < contact_num; i++)
+    {
+        B.block(0, 3 * i, 5, 3) = _Ffri;
+    }
+    for (int i = 0; i < 4; i++)
+    {
+        if (contact(i) == 1)
+        {
+            ref_R_s_ext.block(row_index * 3, row_index * 3, 3, 3) = _dy->_ref_R_s[i];
+            row_index++;
+        }
+    }
+    MatX KK_T = _K * _K.transpose();
+    MatX K_leftinv = KK_T.inverse() * _K;
+    MatX D_temp;
+    D_temp.setZero(18, 30);
+    D_temp.block(0, 0, 18, 18) = _H;
+    D_temp.block(0, 18, 18, 12) = -_S.transpose();
+    MatX BRK_inv;
+    BRK_inv.setZero(5, 18);
+    BRK_inv = B * ref_R_s_ext * K_leftinv;
+    D = BRK_inv * D_temp;
+    f = BRK_inv * _C;
+
+    _ineq_task = new ineq_Task(D, f);
 }

@@ -88,8 +88,8 @@ class Dynamics
     double *_quat_xyz;
     int *_parent;
 
-    Mat6 _ref_X_s;
-    Mat6 _ref_X_p;
+    Mat6 _ref_X_s[4];
+    Mat6 _ref_X_p[4];
 
 private:
 

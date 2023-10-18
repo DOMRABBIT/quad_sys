@@ -554,7 +554,7 @@ MatX Dynamics::Cal_K_Flt(MatX &k)
             K.block(row_index, 6 + ks_set[i], nc[nl], 1) = T_ref.transpose() * X_down * _joint[ks_set[i]]._S_Body;
         }
         ref_X_s = _robot->_base->_fltjoint->_X_Base2Wrd * X_down;
-        _ref_X_s = ref_X_s;
+        _ref_X_s[nl] = ref_X_s;
         X_down.setIdentity(6, 6);
         for (int i = 0; i < num_kp; i++)
         {
@@ -562,7 +562,7 @@ MatX Dynamics::Cal_K_Flt(MatX &k)
             K.block(row_index, 6 + kp_set[i], nc[nl], 1) = T_ref.transpose() * X_down * _joint[kp_set[i]]._S_Body;
         }
         ref_X_p = _robot->_base->_fltjoint->_X_Base2Wrd * X_down;
-        _ref_X_p = ref_X_p;
+        _ref_X_p[nl] = ref_X_p;
         if (_lpjoint[nl]._pre == WORLD)
         {
             vp.setZero(6, 1);
