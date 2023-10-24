@@ -54,7 +54,10 @@ int main(int argc, char **argv)
     ctrlPlat = CtrlPlatform::REALROBOT;
 #endif // COMPILE_WITH_REAL_ROBOT
 
-    CtrlComponents *ctrlComp = new CtrlComponents(ioInter);
+    a1Robot *a1 = new a1Robot();
+    Dynamics *dy = new Dynamics(a1);
+
+    CtrlComponents *ctrlComp = new CtrlComponents(ioInter,dy);
     ctrlComp->ctrlPlatform = ctrlPlat;
     ctrlComp->dt = 0.002; // run at 500hz
     ctrlComp->running = &running;

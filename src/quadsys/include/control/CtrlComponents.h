@@ -19,7 +19,7 @@
 struct CtrlComponents
 {
 public:
-    CtrlComponents(IOinterface *ioInter) : ioInter(ioInter)
+    CtrlComponents(IOinterface *ioInter, Dynamics *dy_) : ioInter(ioInter),dy(dy_)
     {
         lowCmd = new LowlevelCmd();
         lowState = new LowlevelState();
@@ -45,6 +45,7 @@ public:
     WaveGenerator *waveGen;
     Estimator *estimator;
     BalanceCtrl *balCtrl;
+    Dynamics *dy;
 
 #ifdef COMPILE_DEBUG
     PyPlot *plot;

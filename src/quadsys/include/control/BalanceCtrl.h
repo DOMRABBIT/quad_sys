@@ -4,6 +4,7 @@
 #include "common/mathTypes.h"
 #include "thirdParty/quadProgpp/QuadProg++.hh"
 #include "common/robot.h"
+#include "wbc_controller/wbc_controller.h"
 
 #ifdef COMPILE_DEBUG
 #include "common/PyPlot.h"

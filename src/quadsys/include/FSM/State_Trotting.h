@@ -15,6 +15,8 @@ public:
     void exit();
     virtual FSMStateName checkChange();
     void setHighCmd(double vx, double vy, double wz);
+    Dynamics *_dy;
+    WBC *_wbc;
 
 private:
     void calcTau();

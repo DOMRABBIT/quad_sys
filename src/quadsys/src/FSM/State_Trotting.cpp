@@ -7,6 +7,8 @@ State_Trotting::State_Trotting(CtrlComponents *ctrlComp)
       _contact(ctrlComp->contact), _robModel(ctrlComp->robotModel),
       _balCtrl(ctrlComp->balCtrl)
 {
+    _dy = ctrlComp->dy;
+    _wbc = new WBC(_dy);
     _gait = new GaitGenerator(ctrlComp);
 
     _gaitHeight = 0.08;
@@ -184,6 +186,7 @@ void State_Trotting::calcCmd()
 
 void State_Trotting::calcTau()
 {
+    std::cout << std::fixed << std::setprecision(3);
     _posError = _pcd - _posBody;
     _velError = _vCmdGlobal - _velBody;
 
@@ -208,9 +211,36 @@ void State_Trotting::calcTau()
         }
     }
 
+    /*************************************************************------*************************************************************/
+    _wbc->dynamics_consistence_task(*_contact);
+    _wbc->closure_constrain_task();
+    Vec2 ddr_xy;
+    ddr_xy << _ddPcd(0), _ddPcd(1);
+    _wbc->desired_torso_motion_task(ddr_xy);
+    Vec34 swingforceFeetGlobal = _forceFeetGlobal;
+    for (int i = 0; i < 4; i++)
+    {
+        if ((*_contact)(i) == 1)
+        {
+            swingforceFeetGlobal.col(i).setZero();
+        }
+    }
+    _wbc->swing_foot_motion_task(swingforceFeetGlobal, *_contact);
+    double yaw_acc = _dWbd(2);
+    double height_acc = _ddPcd(2);
+    _wbc->body_yaw_height_task(yaw_acc, height_acc);
+    double roll_acc = _dWbd(0);
+    double pitch_acc = _dWbd(1);
+    _wbc->body_roll_pitch_task(roll_acc, pitch_acc);
+    _wbc->torque_limit_task();
+    _wbc->friction_cone_task(*_contact);
+    _wbc->solve_HOproblem();
+
+    /*************************************************************------*************************************************************/
+
     _forceFeetBody = _G2B_RotMat * _forceFeetGlobal;
-    std::cout << "force: " << std::endl
-              << _forceFeetBody << std::endl;
+    // std::cout << "force: " << std::endl
+    //           << _forceFeetBody << std::endl;
     _q = vec34ToVec12(_lowState->getQ());
     _tau = _robModel->getTau(_q, _forceFeetBody);
 }

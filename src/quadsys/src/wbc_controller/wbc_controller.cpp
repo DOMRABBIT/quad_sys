@@ -1,6 +1,6 @@
 #include "wbc_controller/wbc_controller.h"
 
-void WBC::dynamics_consistence_task(Vec4 contact)
+void WBC::dynamics_consistence_task(VecInt4 contact)
 {
     int contact_num = 0;
     int row_index = 0;
@@ -13,7 +13,8 @@ void WBC::dynamics_consistence_task(Vec4 contact)
     K_temp = _dy->Cal_K_Flt(k_temp);
     for (int i = 0; i < 4; i++)
     {
-        contact_num++;
+        if (contact(i) == 1)
+            contact_num++;
     }
     _K.setZero(contact_num * 3, 18);
     _k.setZero(contact_num * 3, 1);
@@ -73,10 +74,16 @@ void WBC::desired_torso_motion_task(Vec2 ddr_xy)
 
 // swing_acc only contain swing foot acceleration, which means 
 // the swing cols of swing_acc must set zero when using this function
-void WBC::swing_foot_motion_task(Vec34 swing_acc,int swing_num)
+void WBC::swing_foot_motion_task(Vec34 swing_acc,VecInt4 contact)
 {
     MatX A, b;
     Vec3 swing_acc_in_suc;
+    int swing_num = 0;
+    for (int i = 0; i < 4; i++)
+    {
+        if (contact(i) == 1)
+            swing_num++;
+    }
     A.setZero(swing_num * 3, 30);
     b.setZero(swing_num * 3, 1);
     int row_index = 0;
@@ -151,7 +158,7 @@ void WBC::torque_limit_task()
 }
 
 // contact is the contact situation of four foot 1: contact 0: swing
-void WBC::friction_cone_task(Vec4 contact)
+void WBC::friction_cone_task(VecInt4 contact)
 {
     MatX D, f;
     int row_index = 0;
@@ -161,10 +168,9 @@ void WBC::friction_cone_task(Vec4 contact)
     for (int i = 0; i < 4; i++)
     {
         if(contact(i) == 1)
-        {
             contact_num++;
-        }
     }
+
     D.setZero(5 * contact_num, 30);
     f.setZero(5 * contact_num, 1);
     B.setZero(5 * contact_num, 3 * contact_num);
@@ -208,21 +214,23 @@ void WBC::solve_HOproblem()
         A_bar = _eq_task[i]->_A * C_bar;
         b_bar = _eq_task[i]->_b - _eq_task[i]->_A * d_bar;
         solve_QProblem(A_bar, b_bar, _ineq_task->_D, _ineq_task->_f);
-        d_bar = d_bar + C_bar * _di;
-        Eigen::JacobiSVD<Eigen::MatrixXd> svd(A_bar);
-        if (svd.rank() >= A_bar.rows() || svd.rank() >= A_bar.cols())// if A_bar full rank
-        {
-            _qdd_torque = d_bar;
-        }
-        Eigen::FullPivLU<MatX> lu(b_bar);
-        MatX null_A = lu.kernel();
-        C_bar = C_bar * null_A;
+        // d_bar = d_bar + C_bar * _di;
+        // Eigen::JacobiSVD<Eigen::MatrixXd> svd(A_bar);
+        // if (svd.rank() >= A_bar.rows() || svd.rank() >= A_bar.cols())// if A_bar full rank
+        // {
+        //     _qdd_torque = d_bar;
+        // }
+        // Eigen::FullPivLU<MatX> lu(b_bar);
+        // MatX null_A = lu.kernel();
+        // C_bar = C_bar * null_A;
     }
 }
 
 void WBC::solve_QProblem(MatX A, MatX b, MatX D, MatX f)
 {
-    _G0 = A.transpose() * A;
+    // std::cout << "A: " << A << std::endl;
+    _G0 = A.transpose() * A + _min_ident;
+    _G0 = _min_ident;
     _g0 = b.transpose() * A;
     _CE.setZero(2, 30);
     _ce0.setZero(2, 1);
@@ -230,7 +238,7 @@ void WBC::solve_QProblem(MatX A, MatX b, MatX D, MatX f)
     _ci0 = f;
 
     int n = 30;
-    int m = 2;
+    int m = 0;
     int p = f.size();
 
     G.resize(n, n);
@@ -249,13 +257,13 @@ void WBC::solve_QProblem(MatX A, MatX b, MatX D, MatX f)
         }
     }
 
-    for (int i = 0; i < n; ++i)
-    {
-        for (int j = 0; j < m; ++j)
-        {
-            CE[i][j] = (_CE.transpose())(i, j);
-        }
-    }
+    // for (int i = 0; i < n; ++i)
+    // {
+    //     for (int j = 0; j < m; ++j)
+    //     {
+    //         CE[i][j] = (_CE.transpose())(i, j);
+    //     }
+    // }
 
     for (int i = 0; i < n; ++i)
     {
@@ -270,10 +278,10 @@ void WBC::solve_QProblem(MatX A, MatX b, MatX D, MatX f)
         g0[i] = _g0[i];
     }
 
-    for (int i = 0; i < m; ++i)
-    {
-        ce0[i] = _ce0[i];
-    }
+    // for (int i = 0; i < m; ++i)
+    // {
+    //     ce0[i] = _ce0[i];
+    // }
 
     for (int i = 0; i < p; ++i)
     {

@@ -37,31 +37,34 @@ class ineq_Task
 
 class WBC
 {
+public:
     WBC(Dynamics *dy) : _dy(dy)
     {
         _I_xy.setZero(2, 18);
         _I_xy << 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+            0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
         _I_yaw_height.setZero(2, 18);
         _I_yaw_height << 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                         0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+            0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
         _I_roll_pitch.setZero(2, 18);
         _I_roll_pitch << 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                         0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+            0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
         _I_torque.setIdentity(12, 12);
 
         _frition = 0.35;
-        _Ffri << 1,  0, _frition,
-                -1,  0, _frition,
-                 0,  1, _frition,
-                 0, -1, _frition,
-                 0,  0, 1;
+        _Ffri << 1, 0, _frition,
+            -1, 0, _frition,
+            0, 1, _frition,
+            0, -1, _frition,
+            0, 0, 1;
+
+        _min_ident.setIdentity(30, 30);
+        _min_ident = _min_ident * 0.01;
     }
     ~WBC() {}
 
-public:
     Dynamics *_dy;
     eq_Task *_eq_task[7];
     ineq_Task *_ineq_task;
@@ -72,6 +75,7 @@ public:
     Eigen::Matrix<double, 30, 1> _di;
 
     Eigen::Matrix<double, 30, 30> _G0;
+    Eigen::Matrix<double, 30, 30> _min_ident;
     Eigen::Matrix<double, 1, 30> _g0;
     Eigen::MatrixXd _CE, _CI;
     Eigen::VectorXd _ce0, _ci0;
@@ -79,14 +83,14 @@ public:
     quadprogpp::Matrix<double> G, CE, CI;
     quadprogpp::Vector<double> g0, ce0, ci0, x;
 
-    void dynamics_consistence_task(Vec4 contact);
+    void dynamics_consistence_task(VecInt4 contact);
     void closure_constrain_task();
     void desired_torso_motion_task(Vec2 ddr_xy);
-    void swing_foot_motion_task(Vec34 swing_acc, int swing_num);
+    void swing_foot_motion_task(Vec34 swing_acc, VecInt4 contact);
     void body_yaw_height_task(double yaw_acc,double height_acc);
     void body_roll_pitch_task(double roll_acc, double pitch_acc);
     void torque_limit_task();
-    void friction_cone_task(Vec4 contact);
+    void friction_cone_task(VecInt4 contact);
 
     void solve_HOproblem();
     void solve_QProblem(MatX A, MatX b, MatX D, MatX f);
