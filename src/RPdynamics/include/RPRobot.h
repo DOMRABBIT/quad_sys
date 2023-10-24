@@ -154,6 +154,10 @@ class a1Robot : public Robot
             std::cout << "Initialize Robot a1 completed..."
                       << "time stamp: " << _systick << std::endl;
         }
+        ~a1Robot()
+        {
+            delete _urdf;
+        }
         urdfData *_urdf;
         Vec34 _endPfoot;
 

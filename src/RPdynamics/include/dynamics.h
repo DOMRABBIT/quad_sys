@@ -40,7 +40,10 @@ class Dynamics
             _ref_R_s[i].setIdentity(3,3);
         }
     }
-    ~Dynamics(){}
+    ~Dynamics()
+    {
+        delete _robot;
+    }
 
     void UpdateDatafromRobot()
     {

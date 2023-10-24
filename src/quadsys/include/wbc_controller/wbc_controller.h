@@ -61,7 +61,7 @@ public:
             0, 0, 1;
 
         _min_ident.setIdentity(30, 30);
-        _min_ident = _min_ident * 0.01;
+        _min_ident = _min_ident * 0.001;
     }
     ~WBC() {}
 
@@ -72,11 +72,11 @@ public:
     double _frition;
     Eigen::Matrix<double, 5, 3> _Ffri;
     Eigen::Matrix<double, 30, 1> _qdd_torque;
-    Eigen::Matrix<double, 30, 1> _di;
+    VecX _di;
 
-    Eigen::Matrix<double, 30, 30> _G0;
-    Eigen::Matrix<double, 30, 30> _min_ident;
-    Eigen::Matrix<double, 1, 30> _g0;
+    MatX _G0;
+    MatX _min_ident;
+    VecX _g0;
     Eigen::MatrixXd _CE, _CI;
     Eigen::VectorXd _ce0, _ci0;
 

@@ -37,6 +37,7 @@ public:
         delete waveGen;
         delete estimator;
         delete balCtrl;
+        delete dy;
     }
     IOinterface *ioInter;
     LowlevelCmd *lowCmd;

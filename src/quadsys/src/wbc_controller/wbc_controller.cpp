@@ -209,38 +209,42 @@ void WBC::solve_HOproblem()
     C_bar.setIdentity(30, 30);
     d_bar.setZero(30, 1);
     b_bar.setZero(30, 1);
+    int maxtask = -1;
     for (int i = 0; i < 7; i++)
     {
         A_bar = _eq_task[i]->_A * C_bar;
         b_bar = _eq_task[i]->_b - _eq_task[i]->_A * d_bar;
         solve_QProblem(A_bar, b_bar, _ineq_task->_D, _ineq_task->_f);
-        // d_bar = d_bar + C_bar * _di;
-        // Eigen::JacobiSVD<Eigen::MatrixXd> svd(A_bar);
-        // if (svd.rank() >= A_bar.rows() || svd.rank() >= A_bar.cols())// if A_bar full rank
-        // {
-        //     _qdd_torque = d_bar;
-        // }
-        // Eigen::FullPivLU<MatX> lu(b_bar);
-        // MatX null_A = lu.kernel();
-        // C_bar = C_bar * null_A;
+        d_bar = d_bar + C_bar * _di;
+        Eigen::FullPivLU<MatX> lu(A_bar);
+        if (lu.rank() >= A_bar.cols())// if A_bar full rank
+        {
+            _qdd_torque = d_bar;
+            maxtask = i;
+            break;
+        }
+        MatX null_A = lu.kernel();
+        C_bar = C_bar * null_A;
     }
+    std::cout << "max_task: " << maxtask << std::endl;
+
+    _qdd_torque = d_bar;
 }
 
 void WBC::solve_QProblem(MatX A, MatX b, MatX D, MatX f)
 {
-    // std::cout << "A: " << A << std::endl;
-    _G0 = A.transpose() * A + _min_ident;
-    _G0 = _min_ident;
-    _g0 = b.transpose() * A;
-    _CE.setZero(2, 30);
-    _ce0.setZero(2, 1);
-    _CI = D;
-    _ci0 = f;
-
-    int n = 30;
+    int n = A.cols();
     int m = 0;
     int p = f.size();
-
+    _G0.setZero(n, n);
+    _g0.setZero(n, 1);
+    _di.setZero(n, 1);
+    _min_ident.setIdentity(n, n);
+    _min_ident = _min_ident * 0.001;
+    _G0 = A.transpose() * A + _min_ident;
+    _g0 = A.transpose() * b;
+    _CI = D;
+    _ci0 = f;
     G.resize(n, n);
     CE.resize(n, m);
     CI.resize(n, p);
@@ -257,13 +261,6 @@ void WBC::solve_QProblem(MatX A, MatX b, MatX D, MatX f)
         }
     }
 
-    // for (int i = 0; i < n; ++i)
-    // {
-    //     for (int j = 0; j < m; ++j)
-    //     {
-    //         CE[i][j] = (_CE.transpose())(i, j);
-    //     }
-    // }
 
     for (int i = 0; i < n; ++i)
     {
@@ -275,17 +272,12 @@ void WBC::solve_QProblem(MatX A, MatX b, MatX D, MatX f)
 
     for (int i = 0; i < n; ++i)
     {
-        g0[i] = _g0[i];
+        g0[i] = _g0(i);
     }
-
-    // for (int i = 0; i < m; ++i)
-    // {
-    //     ce0[i] = _ce0[i];
-    // }
 
     for (int i = 0; i < p; ++i)
     {
-        ci0[i] = _ci0[i];
+        ci0[i] = _ci0(i);
     }
 
     double value = solve_quadprog(G, g0, CE, ce0, CI, ci0, x);
