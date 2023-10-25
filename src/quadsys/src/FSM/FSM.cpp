@@ -63,6 +63,7 @@ void FSM::run()
         _mode = FSMMode::NORMAL;
         _currentState->run();
     }
+    _ctrlComp->dy->_robot->_isUpdated = false;
     absoluteWait(_startTime, (long long)(_ctrlComp->dt * 1000000));
 }
 

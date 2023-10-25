@@ -213,29 +213,43 @@ void State_Trotting::calcTau()
 
     /**************************************************************************************************************/
     _wbc->dynamics_consistence_task(*_contact);
-    _wbc->closure_constrain_task();
-    Vec2 ddr_xy;
-    ddr_xy << _ddPcd(0), _ddPcd(1);
-    _wbc->desired_torso_motion_task(ddr_xy);
-    Vec34 swingforceFeetGlobal = _forceFeetGlobal;
+    // _wbc->closure_constrain_task();
+    // Vec2 ddr_xy;
+    // ddr_xy << _ddPcd(0), _ddPcd(1);
+    // _wbc->desired_torso_motion_task(ddr_xy);
+    // Vec34 swingforceFeetGlobal = _forceFeetGlobal;
+    // for (int i = 0; i < 4; i++)
+    // {
+    //     if ((*_contact)(i) == 1)
+    //     {
+    //         swingforceFeetGlobal.col(i).setZero();
+    //     }
+    // }
+    // _wbc->swing_foot_motion_task(swingforceFeetGlobal, *_contact);
+    // double yaw_acc = _dWbd(2);
+    // double height_acc = _ddPcd(2);
+    // _wbc->body_yaw_height_task(yaw_acc, height_acc);
+    // double roll_acc = _dWbd(0);
+    // double pitch_acc = _dWbd(1);
+    // _wbc->body_roll_pitch_task(roll_acc, pitch_acc);
+    // _wbc->torque_limit_task();
+    // _wbc->friction_cone_task(*_contact);
+    // _wbc->solve_HOproblem();
+    // std::cout << _wbc->_qdd_torque.block(18,0,12,1).transpose() << std::endl;
+    Vec18 qdd;
+    Vec34 footforce_foot;
+    Vec12 torque_inv;
+    Vec3 temp1;
+    temp1 << 0, 0, -30;
     for (int i = 0; i < 4; i++)
     {
-        if ((*_contact)(i) == 1)
-        {
-            swingforceFeetGlobal.col(i).setZero();
-        }
+        footforce_foot.col(i) = -_wbc->_dy->_ref_R_s[i].transpose() * temp1;
     }
-    _wbc->swing_foot_motion_task(swingforceFeetGlobal, *_contact);
-    double yaw_acc = _dWbd(2);
-    double height_acc = _ddPcd(2);
-    _wbc->body_yaw_height_task(yaw_acc, height_acc);
-    double roll_acc = _dWbd(0);
-    double pitch_acc = _dWbd(1);
-    _wbc->body_roll_pitch_task(roll_acc, pitch_acc);
-    _wbc->torque_limit_task();
-    _wbc->friction_cone_task(*_contact);
-    _wbc->solve_HOproblem();
-    std::cout << _wbc->_qdd_torque.block(18,0,12,1).transpose() << std::endl;
+
+    qdd.setZero(18, 1);
+
+    torque_inv = _wbc->inverse_dynamics(qdd, footforce_foot, *_contact);
+
     /*******************************************************************************************************************/
 
     _forceFeetBody = _G2B_RotMat * _forceFeetGlobal;
@@ -243,6 +257,9 @@ void State_Trotting::calcTau()
     //           << _forceFeetBody << std::endl;
     _q = vec34ToVec12(_lowState->getQ());
     _tau = _robModel->getTau(_q, _forceFeetBody);
+    // _tau = torque_inv;
+    std::cout << "torque: " << torque_inv.transpose() << std::endl;
+    std::cout << "tauuni: " << _tau.transpose() << std::endl<<std::endl;
 }
 
 void State_Trotting::calcQQd()

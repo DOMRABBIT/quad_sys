@@ -65,9 +65,8 @@ public:
 
     BaseType get_BaseType() { return _basetype; }
     void set_BaseType(BaseType bt) { _basetype = bt; }
-
-private:
     BaseType _basetype;
+    private: 
 };
 
 class Robot

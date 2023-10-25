@@ -80,6 +80,8 @@ public:
     Eigen::MatrixXd _CE, _CI;
     Eigen::VectorXd _ce0, _ci0;
 
+    MatX _D, _f;
+
     quadprogpp::Matrix<double> G, CE, CI;
     quadprogpp::Vector<double> g0, ce0, ci0, x;
 
@@ -91,6 +93,8 @@ public:
     void body_roll_pitch_task(double roll_acc, double pitch_acc);
     void torque_limit_task();
     void friction_cone_task(VecInt4 contact);
+
+    Vec12 inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact);
 
     void solve_HOproblem();
     void solve_QProblem(MatX A, MatX b, MatX D, MatX f);

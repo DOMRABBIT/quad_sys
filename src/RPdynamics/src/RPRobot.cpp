@@ -99,7 +99,7 @@ Robot::Robot(int NB)
 void Robot::Update_Model()
 {
 
-    if (!_isUpdated) //1
+    if (!_isUpdated) // !_isUpdated
     {
         // std::cout << "update!!!" << std::endl;
         if (_base->get_BaseType() == BaseType::Floating)

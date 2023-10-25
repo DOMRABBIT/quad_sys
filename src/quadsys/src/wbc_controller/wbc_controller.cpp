@@ -198,8 +198,85 @@ void WBC::friction_cone_task(VecInt4 contact)
     BRK_inv = B * ref_R_s_ext * K_leftinv;
     D = BRK_inv * D_temp;
     f = BRK_inv * _C;
+    _D = D;
+    _f = f;
 
     _ineq_task = new ineq_Task(D, f);
+}
+
+Vec12 WBC::inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact)
+{
+    /****************************************************************/
+    contact << 1, 1, 1, 1;
+    // double q[12] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    // double qd[12] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    // double quaxyz[7] = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    // double v_base[7] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+
+    // _dy->_robot->set_q(q);
+    // _dy->_robot->set_dq(qd);
+    // _dy->_robot->set_quaxyz(quaxyz);
+    // _dy->_robot->set_vbase(v_base);
+    /****************************************************************/
+    Vec12 torque;
+    _H = _dy->Cal_Generalize_Inertial_Matrix_CRBA_Flt(_H_fl);
+    _C = _dy->Cal_Generalize_Bias_force_Flt(true);
+
+    MatX K_temp, k_temp, lenda;
+    K_temp = _dy->Cal_K_Flt(k_temp);
+    int contact_num = 0;
+    int row_index = 0;
+    for (int i = 0; i < 4; i++)
+    {
+        if (contact(i) == 1)
+            contact_num++;
+    }
+    _K.setZero(contact_num * 3, 18);
+    _k.setZero(contact_num * 3, 1);
+    lenda.setZero(contact_num * 3, 1);
+    for (int i = 0; i < 4; i++)
+    {
+        if (contact(i) == 1)
+        {
+            _K.block(3 * row_index, 0, 3, 18) = K_temp.block(3 * i, 0, 3, 18);
+            _k.block(3 * row_index, 0, 3, 1) = k_temp.block(3 * i, 0, 3, 1);
+            lenda.block(3 * row_index, 0, 3, 1) = footforce.col(i);
+            row_index++;
+        }
+    }
+    friction_cone_task(contact);
+    MatX A, b;
+    A.setZero(18, 24);
+    A.block(0, 0, 18, 12) = _S.transpose();
+    A.block(0, 12, 18, 12) = _K.transpose();
+    b = _H * qdd + _C;
+
+    // std::cout << "_H * qdd + _C " << std::endl
+    //           << qdd.transpose()*_H.transpose() + _C.transpose() << std::endl;
+    MatX D, f;
+    Eigen::Matrix<double, 12, 12> bigR;
+    Eigen::Matrix<double, 20, 12> bigF_fri;
+    for (int i = 0; i < 4; i++)
+    {
+        bigR.block(i * 3, i * 3, 3, 3) = _dy->_ref_R_s[i];
+        bigF_fri.block(5 * i, 3 * i, 5, 3) = _Ffri;
+    }
+    D.setZero(20, 24);
+    D.block(0,12,20,12) = bigF_fri * bigR;
+    f.setZero(20, 1);
+    solve_QProblem(-A, b, D, f);
+
+    Vec12 footf;
+    for (int i = 0; i < 12; i++)
+    {
+        torque[i] = _di[i];
+    }
+    for (int i = 0; i < 12; i++)
+    {
+        footf[i] = _di[i + 12];
+    }
+    std::cout << "footf: " << footf.transpose() << std::endl;
+    return torque;
 }
 
 void WBC::solve_HOproblem()
@@ -240,7 +317,7 @@ void WBC::solve_QProblem(MatX A, MatX b, MatX D, MatX f)
     _g0.setZero(n, 1);
     _di.setZero(n, 1);
     _min_ident.setIdentity(n, n);
-    _min_ident = _min_ident * 0.001;
+    _min_ident = _min_ident * 0.0001;
     _G0 = A.transpose() * A + _min_ident;
     _g0 = A.transpose() * b;
     _CI = D;
@@ -281,6 +358,7 @@ void WBC::solve_QProblem(MatX A, MatX b, MatX D, MatX f)
     }
 
     double value = solve_quadprog(G, g0, CE, ce0, CI, ci0, x);
+    std::cout << "min value: " << value << std::endl;
 
     for (int i = 0; i < n; ++i)
     {
