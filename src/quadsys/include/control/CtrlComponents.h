@@ -47,6 +47,10 @@ public:
     Estimator *estimator;
     BalanceCtrl *balCtrl;
     Dynamics *dy;
+    double q[12];
+    double qd[12];
+    double quaxyz[7];
+    double v_base[6];
 
 #ifdef COMPILE_DEBUG
     PyPlot *plot;
@@ -62,6 +66,17 @@ public:
     void sendRecv()
     {
         ioInter->sendRecv(lowCmd, lowState);
+        for (int i(0); i < 12; ++i)
+        {
+            q[i] = lowState->motorState[i].q;
+            qd[i] = lowState->motorState[i].dq;
+        }
+        for (int i(0); i < 3; ++i)
+        {
+            quaxyz[i] = lowState->imu.quaternion[i];
+            v_base[i] = lowState->imu.gyroscope[i];
+        }
+        quaxyz[3] = lowState->imu.quaternion[3];
     }
     void runWaveGen()
     {
@@ -87,6 +102,22 @@ public:
     {
         estimator = new Estimator(robotModel, lowState, contact, phase, dt);
         balCtrl = new BalanceCtrl(robotModel);
+    }
+
+    void set_robot_state()
+    {
+        Vec3 EstPosition = estimator->getPosition();
+        Vec3 EstVelocity = estimator->getVelocity();
+        quaxyz[4] = EstPosition(0);
+        quaxyz[5] = EstPosition(1);
+        quaxyz[6] = EstPosition(2);
+        v_base[3] = EstVelocity(0);
+        v_base[4] = EstVelocity(1);
+        v_base[5] = EstVelocity(2);
+        dy->_robot->set_q(q);
+        dy->_robot->set_dq(qd);
+        dy->_robot->set_quaxyz(quaxyz);
+        dy->_robot->set_vbase(v_base);
     }
 
 #ifdef COMPILE_DEBUG

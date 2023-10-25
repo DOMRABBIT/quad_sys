@@ -75,6 +75,8 @@ void IOROS::sendRecv(const LowlevelCmd *cmd, LowlevelState *state)
 
     state->userCmd = cmdPanel->getUserCmd();
     state->userValue = cmdPanel->getUserValue();
+
+    
 }
 
 void IOROS::recvState(LowlevelState *state)

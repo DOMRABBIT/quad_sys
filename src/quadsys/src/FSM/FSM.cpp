@@ -38,6 +38,7 @@ void FSM::run()
     _ctrlComp->sendRecv();
     _ctrlComp->runWaveGen();
     _ctrlComp->estimator->run();
+    _ctrlComp->set_robot_state();
     if (!checkSafty())
     {
         _ctrlComp->ioInter->setPassive();

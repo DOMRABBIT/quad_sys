@@ -226,7 +226,7 @@ void WBC::solve_HOproblem()
         MatX null_A = lu.kernel();
         C_bar = C_bar * null_A;
     }
-    std::cout << "max_task: " << maxtask << std::endl;
+    // std::cout << "max_task: " << maxtask << std::endl;
 
     _qdd_torque = d_bar;
 }
