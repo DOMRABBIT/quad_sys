@@ -208,20 +208,15 @@ Vec12 WBC::inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact)
 {
     /****************************************************************/
     contact << 1, 1, 1, 1;
-    // double q[12] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-    // double qd[12] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-    // double quaxyz[7] = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-    // double v_base[7] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-
-    // _dy->_robot->set_q(q);
-    // _dy->_robot->set_dq(qd);
-    // _dy->_robot->set_quaxyz(quaxyz);
-    // _dy->_robot->set_vbase(v_base);
     /****************************************************************/
     Vec12 torque;
     _H = _dy->Cal_Generalize_Inertial_Matrix_CRBA_Flt(_H_fl);
     _C = _dy->Cal_Generalize_Bias_force_Flt(true);
-
+    // MatX smallC = _dy->Cal_Generalize_Bias_force(true);
+    // Vec12 errorC = smallC - _C.block(6, 0, 12, 1);
+    // double norm_C = errorC.norm();
+    // if (norm_C>0.01)
+    //     std::cout << "C_error: " << norm_C << std::endl;
     MatX K_temp, k_temp, lenda;
     K_temp = _dy->Cal_K_Flt(k_temp);
     int contact_num = 0;
@@ -251,8 +246,8 @@ Vec12 WBC::inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact)
     A.block(0, 12, 18, 12) = _K.transpose();
     b = _H * qdd + _C;
 
-    // std::cout << "_H * qdd + _C " << std::endl
-    //           << qdd.transpose()*_H.transpose() + _C.transpose() << std::endl;
+    // std::cout << "_C " << std::endl
+    //           << _C.transpose() << std::endl;
     MatX D, f;
     Eigen::Matrix<double, 12, 12> bigR;
     Eigen::Matrix<double, 20, 12> bigF_fri;
@@ -264,7 +259,7 @@ Vec12 WBC::inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact)
     D.setZero(20, 24);
     D.block(0,12,20,12) = bigF_fri * bigR;
     f.setZero(20, 1);
-    solve_QProblem(-A, b, D, f);
+    solve_QProblem(A, b, D, f);
 
     Vec12 footf;
     for (int i = 0; i < 12; i++)
@@ -275,7 +270,9 @@ Vec12 WBC::inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact)
     {
         footf[i] = _di[i + 12];
     }
-    std::cout << "footf: " << footf.transpose() << std::endl;
+    MatX error = A * _di - b;
+    std::cout << "error: " << error.transpose() << std::endl;
+    std::cout << "footfmy: " << footf.transpose() << std::endl;
     return torque;
 }
 
@@ -312,14 +309,14 @@ void WBC::solve_QProblem(MatX A, MatX b, MatX D, MatX f)
 {
     int n = A.cols();
     int m = 0;
-    int p = f.size();
+    int p = f.size(); // f.size()
     _G0.setZero(n, n);
     _g0.setZero(n, 1);
     _di.setZero(n, 1);
     _min_ident.setIdentity(n, n);
-    _min_ident = _min_ident * 0.0001;
+    _min_ident = _min_ident * 0.0001f;
     _G0 = A.transpose() * A + _min_ident;
-    _g0 = A.transpose() * b;
+    _g0 = A.transpose() * (-b);
     _CI = D;
     _ci0 = f;
     G.resize(n, n);

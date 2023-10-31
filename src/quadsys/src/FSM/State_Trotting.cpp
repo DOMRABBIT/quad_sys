@@ -253,11 +253,17 @@ void State_Trotting::calcTau()
     /*******************************************************************************************************************/
 
     _forceFeetBody = _G2B_RotMat * _forceFeetGlobal;
+    for (int i = 0; i < 4; i++)
+    {
+        footforce_foot.col(i) = -_wbc->_dy->_ref_R_s[i].transpose() * _forceFeetBody.col(i);
+    }
     // std::cout << "force: " << std::endl
     //           << _forceFeetBody << std::endl;
     _q = vec34ToVec12(_lowState->getQ());
     _tau = _robModel->getTau(_q, _forceFeetBody);
     // _tau = torque_inv;
+    Vec12 footuni = vec34ToVec12(footforce_foot);
+    std::cout << "footuni: " << footuni.transpose() << std::endl;
     std::cout << "torque: " << torque_inv.transpose() << std::endl;
     std::cout << "tauuni: " << _tau.transpose() << std::endl<<std::endl;
 }

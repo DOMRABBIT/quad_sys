@@ -341,7 +341,7 @@ MatX Dynamics::Cal_Generalize_Bias_force_Flt(bool Gra_offset)
             _avp[i] = crm(_v[i]) * vJ;
             _a[i] = _X_uptree[i] * _a[_parent[i]] + _avp[i];
         }
-        _f[i] = _robot->_body[i]._rbi * _a[i] + crf(_v[i]) * _robot->_body[i]._rbi * _v[i];
+        _f[i] = _body[i]._rbi * _a[i] + crf(_v[i]) * _body[i]._rbi * _v[i];
     }
     Vec6 f0 = _robot->_base->_rbi * (-g) + crf(v_base) * _robot->_base->_rbi * v_base;
     for (int i = _NB - 1; i >= 0; --i)

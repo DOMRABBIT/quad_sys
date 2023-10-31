@@ -34,6 +34,7 @@ void ShutDown(int sig)
 
 int main(int argc, char **argv)
 {
+    long long int timer = 0;
     /* set real-time process */
     setProcessScheduler();
     /* set the print format */
@@ -83,6 +84,8 @@ int main(int argc, char **argv)
 
     while (running)
     {
+        timer++;
+        // std::cout << "time: " << timer << std::endl;
         ctrlFrame.run();
     }
 
