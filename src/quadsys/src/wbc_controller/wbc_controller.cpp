@@ -167,7 +167,7 @@ void WBC::friction_cone_task(VecInt4 contact)
     int contact_num = 0;
     for (int i = 0; i < 4; i++)
     {
-        if(contact(i) == 1)
+        if (contact(i) == 1)
             contact_num++;
     }
 
@@ -208,15 +208,20 @@ Vec12 WBC::inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact)
 {
     /****************************************************************/
     contact << 1, 1, 1, 1;
+    MatX S_T;
+    S_T.setZero(18, 12);
+    S_T.block(6, 0, 12, 12).setIdentity(12, 12);
+    _S.setZero(12, 18);
+    _S.block(0, 6, 12, 12).setIdentity(12, 12);
     /****************************************************************/
     Vec12 torque;
     _H = _dy->Cal_Generalize_Inertial_Matrix_CRBA_Flt(_H_fl);
     _C = _dy->Cal_Generalize_Bias_force_Flt(true);
-    // MatX smallC = _dy->Cal_Generalize_Bias_force(true);
-    // Vec12 errorC = smallC - _C.block(6, 0, 12, 1);
+    MatX smallC = _dy->Cal_Generalize_Bias_force(true);
+    Vec12 errorC = smallC - _C.block(6, 0, 12, 1);
     // double norm_C = errorC.norm();
     // if (norm_C>0.01)
-    //     std::cout << "C_error: " << norm_C << std::endl;
+    // std::cout << "C_error: " << errorC.transpose() << std::endl;
     MatX K_temp, k_temp, lenda;
     K_temp = _dy->Cal_K_Flt(k_temp);
     int contact_num = 0;
@@ -239,10 +244,10 @@ Vec12 WBC::inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact)
             row_index++;
         }
     }
-    friction_cone_task(contact);
+    // friction_cone_task(contact);
     MatX A, b;
     A.setZero(18, 24);
-    A.block(0, 0, 18, 12) = _S.transpose();
+    A.block(0, 0, 18, 12) = _S.transpose(); //_S.transpose()
     A.block(0, 12, 18, 12) = _K.transpose();
     b = _H * qdd + _C;
 
@@ -257,21 +262,39 @@ Vec12 WBC::inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact)
         bigF_fri.block(5 * i, 3 * i, 5, 3) = _Ffri;
     }
     D.setZero(20, 24);
-    D.block(0,12,20,12) = bigF_fri * bigR;
+    D.block(0, 12, 20, 12) = bigF_fri * bigR;
     f.setZero(20, 1);
     solve_QProblem(A, b, D, f);
+    Eigen::FullPivLU<MatX> lu(A);
+    _di = lu.solve(b);
+    MatX null_A = lu.kernel();
+    // std::cout << "A_size: " << null_A.rows() << " " << null_A.cols() << std::endl;
+    // std::cout << "size_di: " << _di.size() << std::endl;
+    VecX w_ = solve_QProblem_Ab(null_A, -_di);
 
+    VecX resultX = null_A * w_ + _di;
     Vec12 footf;
+    // for (int i = 0; i < 12; i++)
+    // {
+    //     torque[i] = _di[i];
+    // }
+    // for (int i = 0; i < 12; i++)
+    // {
+    //     footf[i] = _di[i + 12];
+    // }
     for (int i = 0; i < 12; i++)
     {
-        torque[i] = _di[i];
+        torque[i] = resultX[i];
     }
     for (int i = 0; i < 12; i++)
     {
-        footf[i] = _di[i + 12];
+        footf[i] = resultX[i + 12];
     }
     MatX error = A * _di - b;
+    Vec12 footuni = vec34ToVec12(footforce);
+    MatX force_temp = _K.transpose() * footf;
     std::cout << "error: " << error.transpose() << std::endl;
+    // std::cout << "KTlda: " << force_temp.transpose() << std::endl;
     std::cout << "footfmy: " << footf.transpose() << std::endl;
     return torque;
 }
@@ -314,7 +337,7 @@ void WBC::solve_QProblem(MatX A, MatX b, MatX D, MatX f)
     _g0.setZero(n, 1);
     _di.setZero(n, 1);
     _min_ident.setIdentity(n, n);
-    _min_ident = _min_ident * 0.0001f;
+    _min_ident = _min_ident * 0.00001f;
     _G0 = A.transpose() * A + _min_ident;
     _g0 = A.transpose() * (-b);
     _CI = D;
@@ -355,10 +378,54 @@ void WBC::solve_QProblem(MatX A, MatX b, MatX D, MatX f)
     }
 
     double value = solve_quadprog(G, g0, CE, ce0, CI, ci0, x);
-    std::cout << "min value: " << value << std::endl;
+    // std::cout << "min value: " << value << std::endl;
 
     for (int i = 0; i < n; ++i)
     {
         _di[i] = x[i];
     }
+}
+
+VecX WBC::solve_QProblem_Ab(MatX A, MatX b)
+{
+    VecX result;
+    int n = A.cols();
+    int m = 0;
+    int p = 0; // f.size()
+    _G0.setZero(n, n);
+    _g0.setZero(n, 1);
+    // _min_ident.setIdentity(n, n);
+    // _min_ident = _min_ident * 0.0001f;
+    _G0 = A.transpose() * A;
+    _g0 = A.transpose() * (-b);
+    G.resize(n, n);
+    CE.resize(n, m);
+    CI.resize(n, p);
+    g0.resize(n);
+    ce0.resize(m);
+    ci0.resize(p);
+    x.resize(n);
+
+    for (int i = 0; i < n; ++i)
+    {
+        for (int j = 0; j < n; ++j)
+        {
+            G[i][j] = _G0(i, j);
+        }
+    }
+
+    for (int i = 0; i < n; ++i)
+    {
+        g0[i] = _g0(i);
+    }
+
+
+    double value = solve_quadprog(G, g0, CE, ce0, CI, ci0, x);
+    // // std::cout << "min value: " << value << std::endl;
+    result.setZero(n, 1);
+    for (int i = 0; i < n; ++i)
+    {
+        result(i) = x[i];
+    }
+    return result;
 }

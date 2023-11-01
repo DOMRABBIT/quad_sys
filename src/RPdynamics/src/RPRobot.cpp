@@ -116,9 +116,9 @@ void Robot::Update_Model()
             T.block(0, 3, 3, 1) = p;
             _base->_fltjoint->_T_Wrd2Base = T;
             AdjointT(T, _base->_fltjoint->_X_Wrd2Base);
-            // Mat4 T_temp = _base->_fltjoint->_T_Wrd2Base * _base->_fltjoint->_T_Base2Wrd;
-            // std::cout << "T_base_err: " << std::endl
-            //           << T_temp << std::endl;
+            // Mat6 X_temp = _base->_fltjoint->_X_Wrd2Base * _base->_fltjoint->_X_Base2Wrd;
+            // std::cout << "X_temp: " << std::endl
+            //           << X_temp << std::endl;
         }
         else
         {
@@ -238,13 +238,14 @@ Mat4 Robot::Flt_Transform()
     Mat3 R;
     Vec3 xyz;
     xyz << _quat_xyz[4], _quat_xyz[5], _quat_xyz[6];
-    // std::cout << "xyz: " << xyz << std::endl;
+    // std::cout << "xyz: " << xyz.transpose() << std::endl;
     Eigen::Quaterniond qua(_quat_xyz[0],
                            _quat_xyz[1],
                            _quat_xyz[2],
                            _quat_xyz[3]); // w x y z
     qua.normalize();
     R = qua.matrix();
+    // std::cout << "R_base: " <<std::endl<< R << std::endl;
     T.setIdentity(4, 4);
     T.block(0, 0, 3, 3) = R;
     T.block(0, 3, 3, 1) = xyz;

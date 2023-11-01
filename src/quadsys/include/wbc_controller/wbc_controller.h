@@ -93,11 +93,13 @@ public:
     void body_roll_pitch_task(double roll_acc, double pitch_acc);
     void torque_limit_task();
     void friction_cone_task(VecInt4 contact);
+    
 
     Vec12 inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact);
 
     void solve_HOproblem();
     void solve_QProblem(MatX A, MatX b, MatX D, MatX f);
+    VecX solve_QProblem_Ab(MatX A, MatX b);
 
 private:
 };

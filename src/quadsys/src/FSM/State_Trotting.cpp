@@ -212,7 +212,7 @@ void State_Trotting::calcTau()
     }
 
     /**************************************************************************************************************/
-    _wbc->dynamics_consistence_task(*_contact);
+    // _wbc->dynamics_consistence_task(*_contact);
     // _wbc->closure_constrain_task();
     // Vec2 ddr_xy;
     // ddr_xy << _ddPcd(0), _ddPcd(1);
@@ -240,15 +240,13 @@ void State_Trotting::calcTau()
     Vec34 footforce_foot;
     Vec12 torque_inv;
     Vec3 temp1;
-    temp1 << 0, 0, -30;
-    for (int i = 0; i < 4; i++)
-    {
-        footforce_foot.col(i) = -_wbc->_dy->_ref_R_s[i].transpose() * temp1;
-    }
+    // temp1 << 0, 0, -30;
+    // for (int i = 0; i < 4; i++)
+    // {
+    //     footforce_foot.col(i) = -_wbc->_dy->_ref_R_s[i].transpose() * temp1;
+    // }
 
     qdd.setZero(18, 1);
-
-    torque_inv = _wbc->inverse_dynamics(qdd, footforce_foot, *_contact);
 
     /*******************************************************************************************************************/
 
@@ -257,6 +255,7 @@ void State_Trotting::calcTau()
     {
         footforce_foot.col(i) = -_wbc->_dy->_ref_R_s[i].transpose() * _forceFeetBody.col(i);
     }
+    torque_inv = _wbc->inverse_dynamics(qdd, footforce_foot, *_contact);
     // std::cout << "force: " << std::endl
     //           << _forceFeetBody << std::endl;
     _q = vec34ToVec12(_lowState->getQ());

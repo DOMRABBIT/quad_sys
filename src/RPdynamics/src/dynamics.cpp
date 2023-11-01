@@ -321,10 +321,11 @@ MatX Dynamics::Cal_Generalize_Bias_force_Flt(bool Gra_offset)
 
     // 在floating base坐标系下表示g
     g = _base->_fltjoint->_X_Wrd2Base * g;
+    // std::cout << "g_base: " << g.transpose() << std::endl;
     // 在floating base坐标系下表示v_base
     Vec6 v_base;
-    v_base = _base->_fltjoint->_X_Wrd2Base * _robot -> _v_base;
-
+    v_base = _robot -> _v_base;
+    // std::cout << "v_base: " << v_base.transpose() << std::endl;
     // forward pass, velocity and acceleration propagation
     for (int i = 0; i < _NB; i++)
     {
@@ -341,7 +342,7 @@ MatX Dynamics::Cal_Generalize_Bias_force_Flt(bool Gra_offset)
             _avp[i] = crm(_v[i]) * vJ;
             _a[i] = _X_uptree[i] * _a[_parent[i]] + _avp[i];
         }
-        _f[i] = _body[i]._rbi * _a[i] + crf(_v[i]) * _body[i]._rbi * _v[i];
+        _f[i] = _robot->_body[i]._rbi * _a[i] + crf(_v[i]) * _robot->_body[i]._rbi * _v[i];
     }
     Vec6 f0 = _robot->_base->_rbi * (-g) + crf(v_base) * _robot->_base->_rbi * v_base;
     for (int i = _NB - 1; i >= 0; --i)
@@ -541,7 +542,10 @@ MatX Dynamics::Cal_K_Flt(MatX &k)
 
         // --------------------------------------
 
-        MatX T_ref = lps_X_ref.transpose() * _lpjoint[nl].T;
+        // MatX T_ref = lps_X_ref.transpose() * _lpjoint[nl].T;
+        MatX T_base = _base->_fltjoint->_X_Base2Wrd.transpose() * lps_X_ref.transpose() * _lpjoint[nl].T;
+        // std::cout << nl << ": " << std::endl
+        //           << _lpjoint[nl].T.transpose() << std::endl;
 
         if (nl != 0)
             row_index += nc[nl - 1];
@@ -551,7 +555,7 @@ MatX Dynamics::Cal_K_Flt(MatX &k)
         for (int i = 0; i < num_ks; i++)
         {
             X_down = X_down * _X_dwtree[ks_set[i]];
-            K.block(row_index, 6 + ks_set[i], nc[nl], 1) = T_ref.transpose() * X_down * _joint[ks_set[i]]._S_Body;
+            K.block(row_index, 6 + ks_set[i], nc[nl], 1) = T_base.transpose() * X_down * _joint[ks_set[i]]._S_Body;
         }
         ref_X_s = _robot->_base->_fltjoint->_X_Base2Wrd * X_down;
         _ref_X_s[nl] = ref_X_s;
@@ -559,7 +563,7 @@ MatX Dynamics::Cal_K_Flt(MatX &k)
         for (int i = 0; i < num_kp; i++)
         {
             X_down = X_down * _X_dwtree[kp_set[i]];
-            K.block(row_index, 6 + kp_set[i], nc[nl], 1) = T_ref.transpose() * X_down * _joint[kp_set[i]]._S_Body;
+            K.block(row_index, 6 + kp_set[i], nc[nl], 1) = T_base.transpose() * X_down * _joint[kp_set[i]]._S_Body;
         }
         ref_X_p = _robot->_base->_fltjoint->_X_Base2Wrd * X_down;
         _ref_X_p[nl] = ref_X_p;
@@ -580,12 +584,12 @@ MatX Dynamics::Cal_K_Flt(MatX &k)
         }
         else
         {
-            vs = ref_X_s * _v[_lpjoint[nl]._suc];
-            as = ref_X_s * _avp[_lpjoint[nl]._suc];
+            vs = _base->_fltjoint->_X_Wrd2Base * ref_X_s * _v[_lpjoint[nl]._suc];
+            as = _base->_fltjoint->_X_Wrd2Base * ref_X_s * _avp[_lpjoint[nl]._suc];
         }
 
-        K.block(row_index, 0, nc[nl], 6) = T_ref.transpose() * _robot->_base->_fltjoint->_X_Base2Wrd;
-        k.block(row_index, 0, nc[nl], 1) = -T_ref.transpose() * (as - ap + crm(vs) * vp);
+        K.block(row_index, 0, nc[nl], 6) = T_base.transpose();
+        k.block(row_index, 0, nc[nl], 1) = -T_base.transpose() * (as - ap + crm(vs) * vp);
     }
 
     return K;
