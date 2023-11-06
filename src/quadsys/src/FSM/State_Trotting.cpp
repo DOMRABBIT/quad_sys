@@ -96,9 +96,9 @@ void State_Trotting::run()
     _gait->setGait(_vCmdGlobal.segment(0, 2), _wCmdGlobal(2), _gaitHeight);
     _gait->run(_posFeetGlobalGoal, _velFeetGlobalGoal);
 
-    calcTau();
     calcQQd();
-
+    calcTau();
+    
     if (checkStepOrNot())
     {
         _ctrlComp->setStartWave();
@@ -109,6 +109,8 @@ void State_Trotting::run()
     }
 
     _lowCmd->setTau(_tau);
+    std::cout << "tauuni: " << _tau.transpose() << std::endl
+              << std::endl;
     _lowCmd->setQ(vec34ToVec12(_qGoal));
     _lowCmd->setQd(vec34ToVec12(_qdGoal));
 
@@ -247,24 +249,39 @@ void State_Trotting::calcTau()
     // }
 
     qdd.setZero(18, 1);
+    qdd.block(0, 0, 3, 1) = _dWbd;
+    qdd.block(3, 0, 3, 1) = _ddPcd;
+    Vec3 q_cur, qd_cur;
+    for (int i = 0; i < 4; i++)
+    {
+        q_cur(0) = _dy->_q[i * 3];
+        q_cur(1) = _dy->_q[i * 3 + 1];
+        q_cur(2) = _dy->_q[i * 3 + 2];
+        qd_cur(0) = _dy->_dq[i * 3];
+        qd_cur(1) = _dy->_dq[i * 3 + 1];
+        qd_cur(2) = _dy->_dq[i * 3 + 2];
+        qdd.block(6 + 3 * i, 0, 3, 1) = _KpSwing * (_qGoal.col(i) - q_cur) + _KdSwing * (_qdGoal.col(i) - qd_cur);
+    }
+
+        std::cout << "qdd: " << qdd.transpose() << std::endl;
 
     /*******************************************************************************************************************/
 
     _forceFeetBody = _G2B_RotMat * _forceFeetGlobal;
-    for (int i = 0; i < 4; i++)
-    {
-        footforce_foot.col(i) = -_wbc->_dy->_ref_R_s[i].transpose() * _forceFeetBody.col(i);
-    }
-    torque_inv = _wbc->inverse_dynamics(qdd, footforce_foot, *_contact);
+    // for (int i = 0; i < 4; i++)
+    // {
+    //     footforce_foot.col(i) = -_wbc->_dy->_ref_R_s[i].transpose() * _forceFeetBody.col(i);
+    // }
+    torque_inv = _wbc->inverse_dynamics(qdd, -_forceFeetBody, *_contact);
     // std::cout << "force: " << std::endl
     //           << _forceFeetBody << std::endl;
     _q = vec34ToVec12(_lowState->getQ());
-    _tau = _robModel->getTau(_q, _forceFeetBody);
-    // _tau = torque_inv;
-    Vec12 footuni = vec34ToVec12(footforce_foot);
+    // _tau = _robModel->getTau(_q, _forceFeetBody);
+    _tau = torque_inv;
+    Vec12 footuni = vec34ToVec12(-_forceFeetBody);
     std::cout << "footuni: " << footuni.transpose() << std::endl;
     std::cout << "torque: " << torque_inv.transpose() << std::endl;
-    std::cout << "tauuni: " << _tau.transpose() << std::endl<<std::endl;
+    
 }
 
 void State_Trotting::calcQQd()

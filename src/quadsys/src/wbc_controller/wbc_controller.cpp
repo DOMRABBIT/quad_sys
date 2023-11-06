@@ -163,7 +163,7 @@ void WBC::friction_cone_task(VecInt4 contact)
     MatX D, f;
     int row_index = 0;
     MatX B;
-    MatX ref_R_s_ext;
+    MatX base_R_s_ext;
     int contact_num = 0;
     for (int i = 0; i < 4; i++)
     {
@@ -174,7 +174,7 @@ void WBC::friction_cone_task(VecInt4 contact)
     D.setZero(5 * contact_num, 30);
     f.setZero(5 * contact_num, 1);
     B.setZero(5 * contact_num, 3 * contact_num);
-    ref_R_s_ext.setIdentity(contact_num * 3, contact_num * 3);
+    base_R_s_ext.setIdentity(contact_num * 3, contact_num * 3);
     for (int i = 0; i < contact_num; i++)
     {
         B.block(5 * i, 3 * i, 5, 3) = _Ffri;
@@ -183,7 +183,7 @@ void WBC::friction_cone_task(VecInt4 contact)
     {
         if (contact(i) == 1)
         {
-            ref_R_s_ext.block(row_index * 3, row_index * 3, 3, 3) = _dy->_ref_R_s[i];
+            base_R_s_ext.block(row_index * 3, row_index * 3, 3, 3) = _dy->_robot->_base->_fltjoint->_T_Wrd2Base.block(0, 0, 3, 3) * _dy->_ref_R_s[i];
             row_index++;
         }
     }
@@ -195,7 +195,7 @@ void WBC::friction_cone_task(VecInt4 contact)
     D_temp.block(0, 18, 18, 12) = -_S.transpose();
     MatX BRK_inv;
     BRK_inv.setZero(5 * contact_num, 18);
-    BRK_inv = B * ref_R_s_ext * K_leftinv;
+    BRK_inv = B * base_R_s_ext * K_leftinv;
     D = BRK_inv * D_temp;
     f = BRK_inv * _C;
     _D = D;
@@ -207,7 +207,7 @@ void WBC::friction_cone_task(VecInt4 contact)
 Vec12 WBC::inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact)
 {
     /****************************************************************/
-    contact << 1, 1, 1, 1;
+    // contact << 1, 1, 1, 1;
     MatX S_T;
     S_T.setZero(18, 12);
     S_T.block(6, 0, 12, 12).setIdentity(12, 12);
@@ -216,6 +216,10 @@ Vec12 WBC::inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact)
     /****************************************************************/
     Vec12 torque;
     _H = _dy->Cal_Generalize_Inertial_Matrix_CRBA_Flt(_H_fl);
+    MatX small_H;
+    small_H = _dy->Cal_Generalize_Inertial_Matrix_CRBA();
+    // std::cout << "H: " << std::endl
+    //           << small_H << std::endl;
     _C = _dy->Cal_Generalize_Bias_force_Flt(true);
     MatX smallC = _dy->Cal_Generalize_Bias_force(true);
     Vec12 errorC = smallC - _C.block(6, 0, 12, 1);
@@ -244,56 +248,79 @@ Vec12 WBC::inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact)
             row_index++;
         }
     }
-    // friction_cone_task(contact);
     MatX A, b;
-    A.setZero(18, 24);
+    A.setZero(18, contact_num * 3 + 12);
     A.block(0, 0, 18, 12) = _S.transpose(); //_S.transpose()
-    A.block(0, 12, 18, 12) = _K.transpose();
+    A.block(0, 12, 18, contact_num * 3) = _K.transpose();
     b = _H * qdd + _C;
-
-    // std::cout << "_C " << std::endl
-    //           << _C.transpose() << std::endl;
+    // std::cout << "Hqdd: " << std::endl <<qdd.transpose() * _H.transpose() << std::endl;
+    // std::cout << "H: " << std::endl << _H << std::endl;
     MatX D, f;
-    Eigen::Matrix<double, 12, 12> bigR;
-    Eigen::Matrix<double, 20, 12> bigF_fri;
+    MatX bigR, bigF_fri;
+    bigR.setZero(contact_num * 3, contact_num * 3);
+    bigF_fri.setZero(contact_num * 5, contact_num * 3);
+    row_index = 0;
     for (int i = 0; i < 4; i++)
     {
-        bigR.block(i * 3, i * 3, 3, 3) = _dy->_ref_R_s[i];
-        bigF_fri.block(5 * i, 3 * i, 5, 3) = _Ffri;
+        if (contact(i) == 1)
+        {
+            bigR.block(row_index * 3, row_index * 3, 3, 3) = _dy->_robot->_base->_fltjoint->_T_Wrd2Base.block(0, 0, 3, 3) * _dy->_ref_R_s[i];
+            bigF_fri.block(5 * row_index, 3 * row_index, 5, 3) = _Ffri;
+            row_index++;
+        }
     }
-    D.setZero(20, 24);
-    D.block(0, 12, 20, 12) = bigF_fri * bigR;
-    f.setZero(20, 1);
-    solve_QProblem(A, b, D, f);
+    D.setZero(contact_num * 5, contact_num * 3 + 12);
+    D.block(0, 12, contact_num * 5, contact_num * 3) = bigF_fri * bigR;
+    f.setZero(contact_num * 5, 1);
+    // solve_QProblem(A, b, D, f);
     Eigen::FullPivLU<MatX> lu(A);
-    _di = lu.solve(b);
+    // std::cout << "A_size: " << A.rows() << " " << A.cols() << std::endl;
+    VecX re1 = lu.solve(b);
     MatX null_A = lu.kernel();
-    // std::cout << "A_size: " << null_A.rows() << " " << null_A.cols() << std::endl;
-    // std::cout << "size_di: " << _di.size() << std::endl;
-    VecX w_ = solve_QProblem_Ab(null_A, -_di);
+    std::cout << "nullA_size: " << null_A.rows() << " " << null_A.cols() << std::endl;
+    std::cout << "size_re1: " << re1.size() << std::endl;
+    solve_QProblem(null_A, -re1, D * null_A, D * re1 + f);
+    VecX resultX1 = null_A * _di + re1;
+    std::cout << "yes" << std::endl;
+    // VecX re_Ab= solve_QProblem_Ab(null_A, -re1);
+    // VecX resultX2 = null_A * re_Ab + re1;
 
-    VecX resultX = null_A * w_ + _di;
+    // VecX frition_cone = D * resultX2;
+    // std::cout << "frition_cone: " << D << std::endl;
     Vec12 footf;
-    // for (int i = 0; i < 12; i++)
-    // {
-    //     torque[i] = _di[i];
-    // }
-    // for (int i = 0; i < 12; i++)
-    // {
-    //     footf[i] = _di[i + 12];
-    // }
     for (int i = 0; i < 12; i++)
     {
-        torque[i] = resultX[i];
+        torque[i] = resultX1[i];
     }
-    for (int i = 0; i < 12; i++)
+    row_index = 0;
+    for (int i = 0; i < 4; i++)
     {
-        footf[i] = resultX[i + 12];
+        if(contact(i) == 1)
+        {
+            footf[3 * i] = resultX1[row_index * 3 + 12];
+            footf[3 * i + 1] = resultX1[row_index * 3 + 13];
+            footf[3 * i + 2] = resultX1[row_index * 3 + 14];
+            row_index++;
+        }
+        
     }
-    MatX error = A * _di - b;
-    Vec12 footuni = vec34ToVec12(footforce);
-    MatX force_temp = _K.transpose() * footf;
-    std::cout << "error: " << error.transpose() << std::endl;
+    row_index = 0;
+    for (int i = 0; i < 4; i++)
+    {
+        if(contact(i)==1)
+        {
+            footf.block(row_index * 3, 0, 3, 1) = _dy->_ref_R_s[i] * footf.block(i * 3, 0, 3, 1);
+            row_index++;
+        }
+    }
+    // std::cout << "frition_cone: " << std::endl
+            //   << frition_cone.transpose() << std::endl;
+    // std::cout << "frition_cone: " << std::endl
+    //           << footf.transpose() * bigF_fri.transpose() << std::endl;
+    // MatX error = A * _di - b;
+    // Vec12 footuni = vec34ToVec12(footforce);
+    // MatX force_temp = _K.transpose() * footf;
+    // std::cout << "error: " << error.transpose() << std::endl;
     // std::cout << "KTlda: " << force_temp.transpose() << std::endl;
     std::cout << "footfmy: " << footf.transpose() << std::endl;
     return torque;
@@ -337,8 +364,8 @@ void WBC::solve_QProblem(MatX A, MatX b, MatX D, MatX f)
     _g0.setZero(n, 1);
     _di.setZero(n, 1);
     _min_ident.setIdentity(n, n);
-    _min_ident = _min_ident * 0.00001f;
-    _G0 = A.transpose() * A + _min_ident;
+    _min_ident = _min_ident * 0.01f;
+    _G0 = A.transpose() * A;
     _g0 = A.transpose() * (-b);
     _CI = D;
     _ci0 = f;
