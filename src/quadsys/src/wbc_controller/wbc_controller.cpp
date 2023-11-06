@@ -235,6 +235,7 @@ Vec12 WBC::inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact)
         if (contact(i) == 1)
             contact_num++;
     }
+    // std::cout << "contact_num: " << contact_num << std::endl;
     _K.setZero(contact_num * 3, 18);
     _k.setZero(contact_num * 3, 1);
     lenda.setZero(contact_num * 3, 1);
@@ -276,44 +277,52 @@ Vec12 WBC::inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact)
     Eigen::FullPivLU<MatX> lu(A);
     // std::cout << "A_size: " << A.rows() << " " << A.cols() << std::endl;
     VecX re1 = lu.solve(b);
-    MatX null_A = lu.kernel();
-    std::cout << "nullA_size: " << null_A.rows() << " " << null_A.cols() << std::endl;
-    std::cout << "size_re1: " << re1.size() << std::endl;
-    solve_QProblem(null_A, -re1, D * null_A, D * re1 + f);
-    VecX resultX1 = null_A * _di + re1;
-    std::cout << "yes" << std::endl;
+    MatX null_A;
+    VecX resultX1;
+    if (!lu.isInvertible()) // not full rank
+    {
+        null_A = lu.kernel();
+        solve_QProblem(null_A, -re1, D * null_A, D * re1 + f);
+        resultX1 = null_A * _di + re1;
+        re1 = resultX1;
+        VecX frition_cone = D * resultX1;
+        // std::cout << " frition_cone " << frition_cone.transpose() << std::endl;
+    }
+    // std::cout << "nullA_size: " << null_A.rows() << " " << null_A.cols() << std::endl;
+    // std::cout << "size_re1: " << re1.size() << std::endl;
+    
+    // std::cout << "yes" << std::endl;
     // VecX re_Ab= solve_QProblem_Ab(null_A, -re1);
     // VecX resultX2 = null_A * re_Ab + re1;
 
     // VecX frition_cone = D * resultX2;
     // std::cout << "frition_cone: " << D << std::endl;
     Vec12 footf;
+    footf.setZero();
     for (int i = 0; i < 12; i++)
     {
-        torque[i] = resultX1[i];
+        torque[i] = re1[i];
     }
     row_index = 0;
     for (int i = 0; i < 4; i++)
     {
         if(contact(i) == 1)
         {
-            footf[3 * i] = resultX1[row_index * 3 + 12];
-            footf[3 * i + 1] = resultX1[row_index * 3 + 13];
-            footf[3 * i + 2] = resultX1[row_index * 3 + 14];
+            footf[3 * i] = re1[row_index * 3 + 12];
+            footf[3 * i + 1] = re1[row_index * 3 + 13];
+            footf[3 * i + 2] = re1[row_index * 3 + 14];
             row_index++;
         }
         
     }
-    row_index = 0;
     for (int i = 0; i < 4; i++)
     {
-        if(contact(i)==1)
+        if(contact(i) == 1)
         {
-            footf.block(row_index * 3, 0, 3, 1) = _dy->_ref_R_s[i] * footf.block(i * 3, 0, 3, 1);
-            row_index++;
+            footf.block(i * 3, 0, 3, 1) = _dy->_ref_R_s[i] * footf.block(i * 3, 0, 3, 1);
         }
     }
-    // std::cout << "frition_cone: " << std::endl
+    // std::cout << "frition_cone: " << std::endl   
             //   << frition_cone.transpose() << std::endl;
     // std::cout << "frition_cone: " << std::endl
     //           << footf.transpose() * bigF_fri.transpose() << std::endl;

@@ -107,10 +107,24 @@ void State_Trotting::run()
     {
         _ctrlComp->setAllStance();
     }
+    // for (int i = 0; i < 4;i++)
+    // {
+    //     if((*_contact)(i) == 1)
+    //     {
+    //         _tau.block(i * 3, 0, 3, 1) = _tau_wbc.block(i * 3, 0, 3, 1);
+    //     }
+    // }
+    Vec12 tau_error = _tau_wbc - _tau;
+    _tau = 0.5 * _tau + 0.5 * _tau_wbc;
+    // std::cout << "tauuni: " << _tau.transpose() << std::endl;
+    
+    // double norm = tau_error.norm();
+    std::cout
+        << "tua_error: " << tau_error.transpose() << std::endl
+        << std::endl;
 
     _lowCmd->setTau(_tau);
-    std::cout << "tauuni: " << _tau.transpose() << std::endl
-              << std::endl;
+    
     _lowCmd->setQ(vec34ToVec12(_qGoal));
     _lowCmd->setQd(vec34ToVec12(_qdGoal));
 
@@ -140,8 +154,9 @@ bool State_Trotting::checkStepOrNot()
         return true;
     }
     else
-    {
-        return false;
+    { 
+        // return false;
+        return true; //
     }
 }
 
@@ -188,7 +203,7 @@ void State_Trotting::calcCmd()
 
 void State_Trotting::calcTau()
 {
-    std::cout << std::fixed << std::setprecision(3);
+    std::cout << std::fixed << std::setprecision(2);
     _posError = _pcd - _posBody;
     _velError = _vCmdGlobal - _velBody;
 
@@ -252,6 +267,11 @@ void State_Trotting::calcTau()
     qdd.block(0, 0, 3, 1) = _dWbd;
     qdd.block(3, 0, 3, 1) = _ddPcd;
     Vec3 q_cur, qd_cur;
+    Mat3 Kpsw, Kdsw, Kpst, Kdst;
+    Kpsw = Vec3(10, 20, 10).asDiagonal();
+    Kdsw = Vec3(1, 2, 1).asDiagonal();
+    Kpst = Vec3(0, 0, 0).asDiagonal();
+    Kdst = Vec3(0.0,0.0, 0.0).asDiagonal();
     for (int i = 0; i < 4; i++)
     {
         q_cur(0) = _dy->_q[i * 3];
@@ -260,10 +280,17 @@ void State_Trotting::calcTau()
         qd_cur(0) = _dy->_dq[i * 3];
         qd_cur(1) = _dy->_dq[i * 3 + 1];
         qd_cur(2) = _dy->_dq[i * 3 + 2];
-        qdd.block(6 + 3 * i, 0, 3, 1) = _KpSwing * (_qGoal.col(i) - q_cur) + _KdSwing * (_qdGoal.col(i) - qd_cur);
+        if((*_contact)(i) == 1)
+        {
+            qdd.block(6 + 3 * i, 0, 3, 1) = Kpst * (_qGoal.col(i) - q_cur) + Kdst * (_qdGoal.col(i) - qd_cur);
+        }
+        else
+        {
+            qdd.block(6 + 3 * i, 0, 3, 1) = Kpsw * (_qGoal.col(i) - q_cur) + Kdsw * (_qdGoal.col(i) - qd_cur);
+        }
     }
 
-        std::cout << "qdd: " << qdd.transpose() << std::endl;
+    std::cout << "qdd: " << qdd.transpose() << std::endl;
 
     /*******************************************************************************************************************/
 
@@ -276,11 +303,10 @@ void State_Trotting::calcTau()
     // std::cout << "force: " << std::endl
     //           << _forceFeetBody << std::endl;
     _q = vec34ToVec12(_lowState->getQ());
-    // _tau = _robModel->getTau(_q, _forceFeetBody);
-    _tau = torque_inv;
+    _tau = _robModel->getTau(_q, _forceFeetBody);
+    _tau_wbc = torque_inv;
     Vec12 footuni = vec34ToVec12(-_forceFeetBody);
     std::cout << "footuni: " << footuni.transpose() << std::endl;
-    std::cout << "torque: " << torque_inv.transpose() << std::endl;
     
 }
 

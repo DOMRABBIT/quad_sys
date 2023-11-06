@@ -53,7 +53,7 @@ public:
             0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
         _I_torque.setIdentity(12, 12);
 
-        _frition = 0.35;
+        _frition = 0.4;
         _Ffri << 1, 0, _frition,
             -1, 0, _frition,
             0, 1, _frition,
@@ -63,7 +63,15 @@ public:
         _min_ident.setIdentity(30, 30);
         _min_ident = _min_ident * 0.001;
     }
-    ~WBC() {}
+    ~WBC() 
+    {
+        delete _dy;
+        for (int i = 0; i < 7;i++)
+            delete _eq_task[i];
+        delete _ineq_task;
+        delete _dy;
+        delete _dy;
+    }
 
     Dynamics *_dy;
     eq_Task *_eq_task[7];
