@@ -52,7 +52,7 @@ private:
     Vec34 _forceFeetGlobal, _forceFeetBody;
     Vec34 _qGoal, _qdGoal;
     Vec12 _tau;
-    Vec12 _tau_wbc;
+    Vec12 _tau_wbc, _tau_last;
 
     // Control Parameters
     double _gaitHeight;
