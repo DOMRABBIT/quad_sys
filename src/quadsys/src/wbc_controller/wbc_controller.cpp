@@ -259,44 +259,41 @@ Vec12 WBC::inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact)
     MatX D, f;
     MatX bigR, bigF_fri;
     bigR.setZero(contact_num * 3, contact_num * 3);
-    bigF_fri.setZero(contact_num * 5, contact_num * 3);
+    bigF_fri.setZero(contact_num * 6, contact_num * 3);
+    f.setZero(contact_num * 6, 1);
     row_index = 0;
     for (int i = 0; i < 4; i++)
     {
         if (contact(i) == 1)
         {
             bigR.block(row_index * 3, row_index * 3, 3, 3) = _dy->_robot->_base->_fltjoint->_T_Wrd2Base.block(0, 0, 3, 3) * _dy->_ref_R_s[i];
-            bigF_fri.block(5 * row_index, 3 * row_index, 5, 3) = _Ffri;
+            bigF_fri.block(6 * row_index, 3 * row_index, 6, 3) = _Ffri;
+            f(row_index * 6 + 5) = 100.0;
             row_index++;
         }
     }
-    D.setZero(contact_num * 5, contact_num * 3 + 12);
-    D.block(0, 12, contact_num * 5, contact_num * 3) = bigF_fri * bigR;
-    f.setZero(contact_num * 5, 1);
-    // solve_QProblem(A, b, D, f);
+    // std::cout << "f: " << f.transpose() << std::endl;
+    D.setZero(contact_num * 6, contact_num * 3 + 12);
+    D.block(0, 12, contact_num * 6, contact_num * 3) = bigF_fri * bigR;
+    // std::cout << "yes" << std::endl;
+    solve_QProblem(A, b, D, f);
+    // std::cout << "yes" << std::endl;
     Eigen::FullPivLU<MatX> lu(A);
     // std::cout << "A_size: " << A.rows() << " " << A.cols() << std::endl;
-    VecX re1 = lu.solve(b);
+    // VecX re1 = lu.solve(b);
+    VecX re1 = _di;
     MatX null_A;
     VecX resultX1;
+    // std::cout << "yes" << std::endl;
     if (!lu.isInvertible()) // not full rank
     {
         null_A = lu.kernel();
         solve_QProblem(null_A, -re1, D * null_A, D * re1 + f);
         resultX1 = null_A * _di + re1;
         re1 = resultX1;
-        VecX frition_cone = D * resultX1;
+        VecX frition_cone = D * resultX1 + f;
         // std::cout << " frition_cone " << frition_cone.transpose() << std::endl;
     }
-    // std::cout << "nullA_size: " << null_A.rows() << " " << null_A.cols() << std::endl;
-    // std::cout << "size_re1: " << re1.size() << std::endl;
-    
-    // std::cout << "yes" << std::endl;
-    // VecX re_Ab= solve_QProblem_Ab(null_A, -re1);
-    // VecX resultX2 = null_A * re_Ab + re1;
-
-    // VecX frition_cone = D * resultX2;
-    // std::cout << "frition_cone: " << D << std::endl;
     Vec12 footf;
     footf.setZero();
     for (int i = 0; i < 12; i++)
@@ -331,7 +328,7 @@ Vec12 WBC::inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact)
     // MatX force_temp = _K.transpose() * footf;
     // std::cout << "error: " << error.transpose() << std::endl;
     // std::cout << "KTlda: " << force_temp.transpose() << std::endl;
-    std::cout << "footfmy: " << footf.transpose() << std::endl;
+    // std::cout << "footfmy: " << footf.transpose() << std::endl;
     return torque;
 }
 
@@ -373,8 +370,8 @@ void WBC::solve_QProblem(MatX A, MatX b, MatX D, MatX f)
     _g0.setZero(n, 1);
     _di.setZero(n, 1);
     _min_ident.setIdentity(n, n);
-    _min_ident = _min_ident * 0.01f;
-    _G0 = A.transpose() * A;
+    _min_ident = _min_ident * 0.0001f;
+    _G0 = A.transpose() * A + _min_ident;
     _g0 = A.transpose() * (-b);
     _CI = D;
     _ci0 = f;

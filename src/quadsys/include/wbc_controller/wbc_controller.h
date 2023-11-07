@@ -58,7 +58,8 @@ public:
             -1, 0, _frition,
             0, 1, _frition,
             0, -1, _frition,
-            0, 0, 1;
+            0, 0, 1,
+            0, 0, -1;
 
         _min_ident.setIdentity(30, 30);
         _min_ident = _min_ident * 0.001;
@@ -78,7 +79,7 @@ public:
     ineq_Task *_ineq_task;
     MatX _H, _H_fl, _C, _K, _k, _S, _G, _I_xy, _J_swingfoot, _I_yaw_height, _I_roll_pitch, _I_torque;
     double _frition;
-    Eigen::Matrix<double, 5, 3> _Ffri;
+    Eigen::Matrix<double, 6, 3> _Ffri;
     Eigen::Matrix<double, 30, 1> _qdd_torque;
     VecX _di;
 

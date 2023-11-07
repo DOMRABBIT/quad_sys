@@ -115,13 +115,21 @@ void State_Trotting::run()
     //     }
     // }
     Vec12 tau_error = _tau_wbc - _tau;
-    _tau = 0.5 * _tau + 0.5 * _tau_wbc;
-    // std::cout << "tauuni: " << _tau.transpose() << std::endl;
-    
+    _tau = 0.0 * _tau + 1.0 * _tau_wbc;
+    for (int i = 0; i < 12;i++)
+    {
+        if(_tau(i) > 33.5 || _tau(i) < -33.5)
+        {
+            std::cout << "OUT OF RANGE!" << std::endl;
+        }
+    }
+    //     std::cout << "tauuni: " << _tau.transpose() << std::endl;
+    // std::cout << "torque: " << _tau_wbc.transpose() << std::endl
+    //           << std::endl;
     // double norm = tau_error.norm();
-    std::cout
-        << "tua_error: " << tau_error.transpose() << std::endl
-        << std::endl;
+    // std::cout
+    //     << "tua_error: " << tau_error.transpose() << std::endl
+    //     << std::endl;
 
     _lowCmd->setTau(_tau);
     
@@ -264,14 +272,14 @@ void State_Trotting::calcTau()
     // }
 
     qdd.setZero(18, 1);
-    qdd.block(0, 0, 3, 1) = _dWbd;
-    qdd.block(3, 0, 3, 1) = _ddPcd;
+    qdd.block(0, 0, 3, 1) = Vec3(0.08, 0.08, 1.0).asDiagonal() * _dWbd;
+    qdd.block(3, 0, 3, 1) = Vec3(1.0, 1.0, 1.0).asDiagonal() * _ddPcd;
     Vec3 q_cur, qd_cur;
     Mat3 Kpsw, Kdsw, Kpst, Kdst;
     Kpsw = Vec3(10, 20, 10).asDiagonal();
     Kdsw = Vec3(1, 2, 1).asDiagonal();
-    Kpst = Vec3(0, 0, 0).asDiagonal();
-    Kdst = Vec3(0.0,0.0, 0.0).asDiagonal();
+    Kpst = Vec3(1.0, 1.0, 1.0).asDiagonal();
+    Kdst = Vec3(1.0, 1.0, 1.0).asDiagonal();
     for (int i = 0; i < 4; i++)
     {
         q_cur(0) = _dy->_q[i * 3];
@@ -290,10 +298,9 @@ void State_Trotting::calcTau()
         }
     }
 
-    std::cout << "qdd: " << qdd.transpose() << std::endl;
+    // std::cout << "qdd: " << qdd.transpose() << std::endl;
 
     /*******************************************************************************************************************/
-
     _forceFeetBody = _G2B_RotMat * _forceFeetGlobal;
     // for (int i = 0; i < 4; i++)
     // {
@@ -306,7 +313,7 @@ void State_Trotting::calcTau()
     _tau = _robModel->getTau(_q, _forceFeetBody);
     _tau_wbc = torque_inv;
     Vec12 footuni = vec34ToVec12(-_forceFeetBody);
-    std::cout << "footuni: " << footuni.transpose() << std::endl;
+    // std::cout << "footuni: " << footuni.transpose() << std::endl;
     
 }
 
