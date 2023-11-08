@@ -126,7 +126,7 @@ void WBC::swing_foot_motion_task(Vec34 swing_acc,VecInt4 contact)
         {
             PIMat.block(0, 0, 3, 3) = -px[i];
             _J_swingfoot.block(row_index * 3, 6 + 3 * i, 3, 3) = PIMat * _dy->Cal_Geometric_Jacobain(2+3*i, Coordiante::INERTIAL).block(0, 3 * i, 6, 3);
-            avp = _dy->_ref_X_s[i] * _dy->_avp[2 + 3 * i];
+            avp =  _dy->_ref_X_s[i] * _dy->_avp[2 + 3 * i];
             b.block(row_index * 3, 0, 3, 1) = swing_acc.block(0, i, 3, 1) - avp.block(3,0,3,1);
             row_index++;
         }
@@ -187,13 +187,13 @@ void WBC::friction_cone_task(VecInt4 contact)
             contact_num++;
     }
 
-    D.setZero(6 * contact_num, 30);
-    f.setZero(6 * contact_num, 1);
-    B.setZero(6 * contact_num, 3 * contact_num);
+    D.setZero(5 * contact_num, 30);
+    f.setZero(5 * contact_num, 1);
+    B.setZero(5 * contact_num, 3 * contact_num);
     base_R_s_ext.setIdentity(contact_num * 3, contact_num * 3);
     for (int i = 0; i < contact_num; i++)
     {
-        B.block(6 * i, 3 * i, 6, 3) = _Ffri;
+        B.block(5 * i, 3 * i, 5, 3) = _Ffri;
     }
     for (int i = 0; i < 4; i++)
     {
@@ -210,7 +210,7 @@ void WBC::friction_cone_task(VecInt4 contact)
     D_temp.block(0, 0, 18, 18) = _H;
     D_temp.block(0, 18, 18, 12) = -_S.transpose();
     MatX BRK_inv;
-    BRK_inv.setZero(6 * contact_num, 18);
+    BRK_inv.setZero(5 * contact_num, 18);
     BRK_inv = B * base_R_s_ext * K_leftinv;
     D = BRK_inv * D_temp;
     f = BRK_inv * _C;
@@ -273,22 +273,22 @@ Vec12 WBC::inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact)
     MatX D, f;
     MatX bigR, bigF_fri;
     bigR.setZero(contact_num * 3, contact_num * 3);
-    bigF_fri.setZero(contact_num * 6, contact_num * 3);
-    f.setZero(contact_num * 6, 1);
+    bigF_fri.setZero(contact_num * 5, contact_num * 3);
+    f.setZero(contact_num * 5, 1);
     row_index = 0;
     for (int i = 0; i < 4; i++)
     {
         if (contact(i) == 1)
         {
             bigR.block(row_index * 3, row_index * 3, 3, 3) = _dy->_robot->_base->_fltjoint->_T_Wrd2Base.block(0, 0, 3, 3) * _dy->_ref_R_s[i];
-            bigF_fri.block(6 * row_index, 3 * row_index, 6, 3) = _Ffri;
-            f(row_index * 6 + 5) = 80.0;
+            bigF_fri.block(5 * row_index, 3 * row_index, 5, 3) = _Ffri;
+            // f(row_index * 6 + 5) = 80.0;
             row_index++;
         }
     }
     // std::cout << "f: " << f.transpose() << std::endl;
-    D.setZero(contact_num * 6, contact_num * 3 + 12);
-    D.block(0, 12, contact_num * 6, contact_num * 3) = bigF_fri * bigR;
+    D.setZero(contact_num * 5, contact_num * 3 + 12);
+    D.block(0, 12, contact_num * 5, contact_num * 3) = bigF_fri * bigR;
     // std::cout << "yes" << std::endl;
     solve_QProblem(A, b, D, f);
     // std::cout << "yes" << std::endl;
@@ -348,98 +348,102 @@ Vec12 WBC::inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact)
 
 void WBC::solve_HOproblem()
 {
-    MatX d_bar;
-    MatX C_bar;
-    // VecX d1 = solve_QProblem_Ab(_eq_task[0]->_A, _eq_task[0]->_b);
-    solve_QProblem(_eq_task[0]->_A, _eq_task[0]->_b, _ineq_task->_D, _ineq_task->_f);
-    d_bar = _di;
-    Eigen::FullPivLU<MatX> lu1(_eq_task[0]->_A);
-    C_bar = lu1.kernel();
+    // MatX d_bar;
+    // MatX C_bar;
+    // // VecX d1 = solve_QProblem_Ab(_eq_task[0]->_A, _eq_task[0]->_b);
+    // solve_QProblem(_eq_task[0]->_A, _eq_task[0]->_b, _ineq_task->_D, _ineq_task->_f);
+    // d_bar = _di;
+    // Eigen::FullPivLU<MatX> lu1(_eq_task[0]->_A);
+    // C_bar = lu1.kernel();
 
-    MatX A2_bar = _eq_task[1]->_A * C_bar;
-    MatX b2 = _eq_task[1]->_b - _eq_task[1]->_A * d_bar;
-    // MatX d2 = solve_QProblem_Ab(A2_bar, b2);
-    solve_QProblem(A2_bar, b2, _ineq_task->_D, _ineq_task->_f);
-    d_bar = d_bar + C_bar * _di;
-    Eigen::FullPivLU<MatX> lu2(A2_bar);
-    C_bar = C_bar * lu2.kernel();
+    // MatX A2_bar = _eq_task[1]->_A * C_bar;
+    // MatX b2 = _eq_task[1]->_b - _eq_task[1]->_A * d_bar;
+    // // MatX d2 = solve_QProblem_Ab(A2_bar, b2);
+    // solve_QProblem(A2_bar, b2, _ineq_task->_D * C_bar, _ineq_task->_D * d_bar + _ineq_task->_f);
+    // d_bar = d_bar + C_bar * _di;
+    // Eigen::FullPivLU<MatX> lu2(A2_bar);
+    // C_bar = C_bar * lu2.kernel();
 
-    // std::cout << "rank: " << C1_bar.rows() << "," << C1_bar.cols() << std::endl;
+    // // std::cout << "rank: " << C1_bar.rows() << "," << C1_bar.cols() << std::endl;
 
-    MatX A3_bar = _eq_task[2]->_A * C_bar;
-    MatX b3 = _eq_task[2]->_b - _eq_task[2]->_A * d_bar;
-    MatX d3 = solve_QProblem_Ab(A3_bar, b3);
-    // solve_QProblem(A3_bar, b3, _ineq_task->_D, _ineq_task->_f);
-    d_bar = d_bar + C_bar * d3;
-    Eigen::FullPivLU<MatX> lu3(A3_bar);
-    C_bar = C_bar * lu3.kernel();
+    // MatX A3_bar = _eq_task[2]->_A * C_bar;
+    // MatX b3 = _eq_task[2]->_b - _eq_task[2]->_A * d_bar;
+    // // MatX d3 = solve_QProblem_Ab(A3_bar, b3);
+    // solve_QProblem(A3_bar, b3, _ineq_task->_D * C_bar, _ineq_task->_D * d_bar + _ineq_task->_f);
+    // d_bar = d_bar + C_bar * _di;
+    // Eigen::FullPivLU<MatX> lu3(A3_bar);
+    // C_bar = C_bar * lu3.kernel();
     
 
-    if (_eq_task[3]->_active == true)
-    {
-        MatX A4_bar = _eq_task[3]->_A * C_bar;
-        MatX b4 = _eq_task[3]->_b - _eq_task[3]->_A * d_bar;
-        MatX d4 = solve_QProblem_Ab(A4_bar, b4);
-        // solve_QProblem(A4_bar, b4, _ineq_task->_D, _ineq_task->_f);
-        d_bar = d_bar + C_bar * d4;
-        Eigen::FullPivLU<MatX> lu4(A4_bar);
-        C_bar = C_bar * lu4.kernel();
-    }
+    // if (_eq_task[3]->_active == true)
+    // {
+    //     MatX A4_bar = _eq_task[3]->_A * C_bar;
+    //     MatX b4 = _eq_task[3]->_b - _eq_task[3]->_A * d_bar;
+    //     // MatX d4 = solve_QProblem_Ab(A4_bar, b4);
+    //     solve_QProblem(A4_bar, b4, _ineq_task->_D * C_bar, _ineq_task->_D * d_bar + _ineq_task->_f);
+    //     d_bar = d_bar + C_bar * _di;
+    //     Eigen::FullPivLU<MatX> lu4(A4_bar);
+    //     C_bar = C_bar * lu4.kernel();
+    // }
     
-    MatX A5_bar = _eq_task[4]->_A * C_bar;
-    MatX b5 = _eq_task[4]->_b - _eq_task[4]->_A * d_bar;
-    MatX d5 = solve_QProblem_Ab(A5_bar, b5);
-    // solve_QProblem(A5_bar, b5, _ineq_task->_D, _ineq_task->_f);
-    d_bar = d_bar + C_bar * d5;
-    Eigen::FullPivLU<MatX> lu5(A5_bar);
-    C_bar = C_bar * lu5.kernel();
+    // MatX A5_bar = _eq_task[4]->_A * C_bar;
+    // MatX b5 = _eq_task[4]->_b - _eq_task[4]->_A * d_bar;
+    // // MatX d5 = solve_QProblem_Ab(A5_bar, b5);
+    // solve_QProblem(A5_bar, b5, _ineq_task->_D * C_bar, _ineq_task->_D * d_bar + _ineq_task->_f);
+    // d_bar = d_bar + C_bar * _di;
+    // Eigen::FullPivLU<MatX> lu5(A5_bar);
+    // C_bar = C_bar * lu5.kernel();
     
-    MatX A6_bar = _eq_task[5]->_A * C_bar;
-    MatX b6 = _eq_task[5]->_b - _eq_task[5]->_A * d_bar;
-    MatX d6 = solve_QProblem_Ab(A6_bar, b6);
-    // solve_QProblem(A6_bar, b6, _ineq_task->_D, _ineq_task->_f);
-    d_bar = d_bar + C_bar * d6;
-    Eigen::FullPivLU<MatX> lu6(A6_bar);
-    C_bar = C_bar * lu6.kernel();
+    // MatX A6_bar = _eq_task[5]->_A * C_bar;
+    // MatX b6 = _eq_task[5]->_b - _eq_task[5]->_A * d_bar;
+    // // MatX d6 = solve_QProblem_Ab(A6_bar, b6);
+    // solve_QProblem(A6_bar, b6, _ineq_task->_D * C_bar, _ineq_task->_D * d_bar + _ineq_task->_f);
+    // d_bar = d_bar + C_bar * _di;
+    // Eigen::FullPivLU<MatX> lu6(A6_bar);
+    // C_bar = C_bar * lu6.kernel();
     
-    MatX A7_bar = _eq_task[6]->_A * C_bar;
-    MatX b7 = _eq_task[6]->_b - _eq_task[6]->_A * d_bar;
-    MatX d7 = solve_QProblem_Ab(A7_bar, b7);
-    // solve_QProblem(A7_bar, b7, _ineq_task->_D, _ineq_task->_f);
-    d_bar = d_bar + C_bar * d7;
-    Eigen::FullPivLU<MatX> lu7(A7_bar);
-    C_bar = C_bar * lu7.kernel();
+    // MatX A7_bar = _eq_task[6]->_A * C_bar;
+    // MatX b7 = _eq_task[6]->_b - _eq_task[6]->_A * d_bar;
+    // // MatX d7 = solve_QProblem_Ab(A7_bar, b7);
+    // solve_QProblem(A7_bar, b7, _ineq_task->_D * C_bar, _ineq_task->_D * d_bar + _ineq_task->_f);
+    // d_bar = d_bar + C_bar * _di;
+    // Eigen::FullPivLU<MatX> lu7(A7_bar);
+    // C_bar = C_bar * lu7.kernel();
 
-    _di = d_bar;
+    // _di = d_bar;
 
     // std::cout << "qdd: " << _di.block(0, 0, 18, 1).transpose() << std::endl;
     // std::cout << "tau: " << _di.block(18, 0, 12, 1).transpose() << std::endl;
 
-    // MatX C_bar, d_bar, A_bar;
-    // MatX b_bar;
-    // C_bar.setIdentity(30, 30);
-    // d_bar.setZero(30, 1);
-    // b_bar.setZero(30, 1);
-    // int maxtask = -1;
-    // for (int i = 0; i < 3; i++)
-    // {
-    //     A_bar = _eq_task[i]->_A * C_bar;
-    //     b_bar = _eq_task[i]->_b - _eq_task[i]->_A * d_bar;
-    //     solve_QProblem(A_bar, b_bar, _ineq_task->_D, _ineq_task->_f);
-    //     d_bar = d_bar + C_bar * _di;
-    //     Eigen::FullPivLU<MatX> lu(A_bar);
-    //     if (lu.rank() >= A_bar.cols())// if A_bar full rank
-    //     {
-    //         _qdd_torque = d_bar;
-    //         maxtask = i;
-    //         break;
-    //     }
-    //     MatX null_A = lu.kernel();
-    //     C_bar = C_bar * null_A;
-    // }
-    // // std::cout << "max_task: " << maxtask << std::endl;
+    MatX C_bar, d_bar, A_bar;
+    MatX b_bar;
+    C_bar.setIdentity(30, 30);
+    d_bar.setZero(30, 1);
+    b_bar.setZero(30, 1);
+    int maxtask = -1;
+    for (int i = 0; i < 7; i++)
+    {
+        if (_eq_task[i]->_active != true)
+        {
+            continue;
+        }
+        A_bar = _eq_task[i]->_A * C_bar;
+        b_bar = _eq_task[i]->_b - _eq_task[i]->_A * d_bar;
+        solve_QProblem(A_bar, b_bar, _ineq_task->_D * C_bar, _ineq_task->_D * d_bar + _ineq_task->_f);
+        d_bar = d_bar + C_bar * _di;
+        Eigen::FullPivLU<MatX> lu(A_bar);
+        if (lu.rank() >= A_bar.cols())// if A_bar full rank
+        {
+            _qdd_torque = d_bar;
+            maxtask = i;
+            break;
+        }
+        C_bar = C_bar * lu.kernel();
+    }
+    _qdd_torque = d_bar;
+    // std::cout << "max_task: " << maxtask << std::endl;
 
-    // _qdd_torque = d_bar;
+    
 }
 
 void WBC::solve_QProblem(MatX A, MatX b, MatX D, MatX f)

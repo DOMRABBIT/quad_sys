@@ -108,33 +108,23 @@ void State_Trotting::run()
     {
         _ctrlComp->setAllStance();
     }
+    
     // for (int i = 0; i < 4;i++)
     // {
     //     if((*_contact)(i) == 0)
     //     {
-    //         _tau.block(i * 3, 0, 3, 1) = _wbc->_di.block(i * 3+18, 0, 3, 1);
+    //         _tau.block(i * 3, 0, 3, 1) = _wbc->_qdd_torque.block(i * 3 + 18, 0, 3, 1);
     //     }
     // }
-    // Vec12 tau_error = _tau_wbc - _tau;
-    // _tau = 0.0 * _tau + 1.0 * _tau_wbc;
-    // std::cout << "torque: " << _wbc->_di.block(18,0,12,1).transpose() << std::endl;
-    // std::cout << "tauuni: " << _tau.transpose() << std::endl
+    _tau = _wbc->_qdd_torque.block(18, 0, 12, 1);
+    // std::cout << "tauuni:" << _tau.transpose() << std::endl;
+    // std::cout << "torque:" << _wbc->_qdd_torque.block(18, 0, 12, 1).transpose() << std::endl
     //           << std::endl;
-    // Vec12 tau_error = _wbc->_di.block(18, 0, 12, 1) - _tau;
-    // std::cout << "tau_error: " << tau_error.norm() << std::endl;
-    _tau = _wbc->_di.block(18, 0, 12, 1);
-    // std::cout << "torque: " << _tau_wbc.transpose() << std::endl
-    //           << std::endl;
-    // double norm = tau_error.norm();
-    // std::cout
-    //     << "tua_error: " << tau_error.transpose() << std::endl
-    //     << std::endl;
-    // _tau = 0.9 * _tau_last + 0.1 * _tau;
     for (int i = 0; i < 12; i++)
     {
         if (_tau(i) > 33.5 || _tau(i) < -33.5)
         {
-            std::cout << "OUT OF RANGE!" << std::endl;
+            // std::cout << "OUT OF RANGE!" << std::endl;
         }
     }
     _lowCmd->setTau(_tau);
@@ -170,8 +160,8 @@ bool State_Trotting::checkStepOrNot()
     }
     else
     { 
-        // return false;
-        return true; //
+        return false;
+        // return true; //
     }
 }
 
@@ -244,68 +234,31 @@ void State_Trotting::calcTau()
     }
 
     /**************************************************************************************************************/
+    Vec3 dw_world = _G2B_RotMat * _dWbd;
+    Vec3 ddp_world = _G2B_RotMat * _ddPcd;
     _wbc->dynamics_consistence_task(*_contact);
     _wbc->closure_constrain_task();
     Vec2 ddr_xy;
-    ddr_xy << _ddPcd(0), _ddPcd(1);
+    ddr_xy << ddp_world(0) * 0.1, ddp_world(1) * 0.1;
     _wbc->desired_torso_motion_task(ddr_xy);
-    Vec34 swingforceFeetGlobal = _forceFeetGlobal;
+    Vec34 swingforceFeetWorld = _G2B_RotMat * _forceFeetGlobal;
     for (int i = 0; i < 4; i++)
     {
         if ((*_contact)(i) == 1)
         {
-            swingforceFeetGlobal.col(i).setZero();
+            swingforceFeetWorld.col(i).setZero();
         }
     }
-    _wbc->swing_foot_motion_task(swingforceFeetGlobal, *_contact);
-    double yaw_acc = _dWbd(2);
-    double height_acc = _ddPcd(2);
+    _wbc->swing_foot_motion_task(swingforceFeetWorld, *_contact);
+    double yaw_acc = dw_world(2); //_dWbd(2)
+    double height_acc = ddp_world(2);
     _wbc->body_yaw_height_task(yaw_acc, height_acc);
-    double roll_acc = _dWbd(0) * 1.0;
-    double pitch_acc = _dWbd(1) * 10.0;
+    double roll_acc = dw_world(0) * 1.5; //_dWbd(0) * 1.5
+    double pitch_acc = dw_world(1) * 20.0; // _dWbd(1) * 20.0
     _wbc->body_roll_pitch_task(roll_acc, pitch_acc);
     _wbc->torque_limit_task();
     _wbc->friction_cone_task(*_contact);
     _wbc->solve_HOproblem();
-    // std::cout <<"torque: "<< _wbc->_qdd_torque.block(18,0,12,1).transpose() << std::endl;
-    // Vec18 qdd;
-    // Vec34 footforce_foot;
-    // Vec12 torque_inv;
-    // Vec3 temp1;
-    // temp1 << 0, 0, -30;
-    // for (int i = 0; i < 4; i++)
-    // {
-    //     footforce_foot.col(i) = -_wbc->_dy->_ref_R_s[i].transpose() * temp1;
-    // }
-
-    // qdd.setZero(18, 1);
-    // qdd.block(0, 0, 3, 1) = Vec3(0.1, 0.1, 1.0).asDiagonal() * _dWbd;
-    // qdd.block(3, 0, 3, 1) = Vec3(1.0, 1.0, 4.0).asDiagonal() * _ddPcd;
-    // Vec3 q_cur, qd_cur;
-    // Mat3 Kpsw, Kdsw, Kpst, Kdst;
-    // Kpsw = Vec3(10, 20, 10).asDiagonal();
-    // Kdsw = Vec3(1, 2, 1).asDiagonal();
-    // Kpst = Vec3(1.0, 1.0, 1.0).asDiagonal();
-    // Kdst = Vec3(1.0, 1.0, 1.0).asDiagonal();
-    // for (int i = 0; i < 4; i++)
-    // {
-    //     q_cur(0) = _dy->_q[i * 3];
-    //     q_cur(1) = _dy->_q[i * 3 + 1];
-    //     q_cur(2) = _dy->_q[i * 3 + 2];
-    //     qd_cur(0) = _dy->_dq[i * 3];
-    //     qd_cur(1) = _dy->_dq[i * 3 + 1];
-    //     qd_cur(2) = _dy->_dq[i * 3 + 2];
-    //     if((*_contact)(i) == 1)
-    //     {
-    //         qdd.block(6 + 3 * i, 0, 3, 1) = Kpst * (_qGoal.col(i) - q_cur) + Kdst * (_qdGoal.col(i) - qd_cur);
-    //     }
-    //     else
-    //     {
-    //         qdd.block(6 + 3 * i, 0, 3, 1) = Kpsw * (_qGoal.col(i) - q_cur) + Kdsw * (_qdGoal.col(i) - qd_cur);
-    //     }
-    // }
-
-    // std::cout << "qdd: " << qdd.transpose() << std::endl;
 
     /*******************************************************************************************************************/
     _forceFeetBody = _G2B_RotMat * _forceFeetGlobal;
