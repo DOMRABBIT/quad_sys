@@ -60,7 +60,7 @@ struct LowlevelCmd
         {
             if (std::isnan(tau(i)))
             {
-                printf("[ERROR] The setTau function meets Nan\n");
+                // printf("[ERROR] The setTau function meets Nan\n");
             }
             motorCmd[i].tau = saturation(tau(i), torqueLimit);
         }
@@ -130,14 +130,14 @@ struct LowlevelCmd
     void setStableGain(int legID)
     {
         motorCmd[legID * 3 + 0].mode = 10;
-        motorCmd[legID * 3 + 0].Kp = 1.5;
-        motorCmd[legID * 3 + 0].Kd = 1.5;
+        motorCmd[legID * 3 + 0].Kp = 0.8;
+        motorCmd[legID * 3 + 0].Kd = 0.8;
         motorCmd[legID * 3 + 1].mode = 10;
-        motorCmd[legID * 3 + 1].Kp = 1.5;
-        motorCmd[legID * 3 + 1].Kd = 1.5;
+        motorCmd[legID * 3 + 1].Kp = 0.8;
+        motorCmd[legID * 3 + 1].Kd = 0.8;
         motorCmd[legID * 3 + 2].mode = 10;
-        motorCmd[legID * 3 + 2].Kp = 1.5;
-        motorCmd[legID * 3 + 2].Kd = 1.5;
+        motorCmd[legID * 3 + 2].Kp = 0.8;
+        motorCmd[legID * 3 + 2].Kd = 0.8;
     }
     void setStableGain()
     {

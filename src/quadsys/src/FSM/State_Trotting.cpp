@@ -110,18 +110,18 @@ void State_Trotting::run()
     }
     // for (int i = 0; i < 4;i++)
     // {
-    //     if((*_contact)(i) == 1)
+    //     if((*_contact)(i) == 0)
     //     {
-    //         _tau.block(i * 3, 0, 3, 1) = _tau_wbc.block(i * 3, 0, 3, 1);
+    //         _tau.block(i * 3, 0, 3, 1) = _wbc->_di.block(i * 3+18, 0, 3, 1);
     //     }
     // }
     // Vec12 tau_error = _tau_wbc - _tau;
     // _tau = 0.0 * _tau + 1.0 * _tau_wbc;
-    std::cout << "torque: " << _wbc->_di.block(18,0,12,1).transpose() << std::endl;
-    std::cout << "tauuni: " << _tau.transpose() << std::endl
-              << std::endl;
-    Vec12 tau_error = _wbc->_di.block(18, 0, 12, 1) - _tau;
-    std::cout << "tau_error: " << tau_error.norm() << std::endl;
+    // std::cout << "torque: " << _wbc->_di.block(18,0,12,1).transpose() << std::endl;
+    // std::cout << "tauuni: " << _tau.transpose() << std::endl
+    //           << std::endl;
+    // Vec12 tau_error = _wbc->_di.block(18, 0, 12, 1) - _tau;
+    // std::cout << "tau_error: " << tau_error.norm() << std::endl;
     _tau = _wbc->_di.block(18, 0, 12, 1);
     // std::cout << "torque: " << _tau_wbc.transpose() << std::endl
     //           << std::endl;
@@ -170,8 +170,8 @@ bool State_Trotting::checkStepOrNot()
     }
     else
     { 
-        return false;
-        // return true; //
+        // return false;
+        return true; //
     }
 }
 
@@ -261,8 +261,8 @@ void State_Trotting::calcTau()
     double yaw_acc = _dWbd(2);
     double height_acc = _ddPcd(2);
     _wbc->body_yaw_height_task(yaw_acc, height_acc);
-    double roll_acc = _dWbd(0);
-    double pitch_acc = _dWbd(1);
+    double roll_acc = _dWbd(0) * 1.0;
+    double pitch_acc = _dWbd(1) * 10.0;
     _wbc->body_roll_pitch_task(roll_acc, pitch_acc);
     _wbc->torque_limit_task();
     _wbc->friction_cone_task(*_contact);

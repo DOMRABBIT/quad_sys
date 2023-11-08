@@ -8,14 +8,20 @@
 class eq_Task
 {
     public:
-        eq_Task(MatX A, VecX b)
+        eq_Task(MatX A, VecX b, bool active)
         {
             _A = A;
             _b = b;
+            _active = active;
+        }
+        eq_Task(bool active)
+        {
+            _active = active;
         }
         ~eq_Task(){}
         MatX _A;
         VecX _b;
+        bool _active;
 
     private:
 };

@@ -47,7 +47,7 @@ void WBC::dynamics_consistence_task(VecInt4 contact)
 
     b = -_G.transpose() * _C;
 
-    _eq_task[0] = new eq_Task(A, b);
+    _eq_task[0] = new eq_Task(A, b, true);
 }
 
 void WBC::closure_constrain_task()
@@ -60,7 +60,7 @@ void WBC::closure_constrain_task()
     A.block(0, 0, rows, 18) = _K;
     b = _k;
 
-    _eq_task[1] = new eq_Task(A, b);
+    _eq_task[1] = new eq_Task(A, b, true);
 }
 
 void WBC::desired_torso_motion_task(Vec2 ddr_xy)
@@ -77,7 +77,7 @@ void WBC::desired_torso_motion_task(Vec2 ddr_xy)
     // A.block(0, 0, 18, 18).setIdentity(18, 18);
     /*************************************/
 
-    _eq_task[2] = new eq_Task(A, b);
+    _eq_task[2] = new eq_Task(A, b, true);
 }
 
 // swing_acc only contain swing foot acceleration, which means 
@@ -89,8 +89,16 @@ void WBC::swing_foot_motion_task(Vec34 swing_acc,VecInt4 contact)
     int swing_num = 0;
     for (int i = 0; i < 4; i++)
     {
-        if (contact(i) == 1)
+        if (contact(i) == 0)
+        {
             swing_num++;
+        }
+            
+    }
+    if (swing_num == 0)
+    {
+        _eq_task[3] = new eq_Task(false);
+        return;
     }
     A.setZero(swing_num * 3, 30);
     b.setZero(swing_num * 3, 1);
@@ -126,7 +134,7 @@ void WBC::swing_foot_motion_task(Vec34 swing_acc,VecInt4 contact)
 
     A.block(0, 0, swing_num * 3, 18) = _J_swingfoot;
 
-    _eq_task[3] = new eq_Task(A, b);
+    _eq_task[3] = new eq_Task(A, b, true);
 }
 
 void WBC::body_yaw_height_task(double yaw_acc, double height_acc)
@@ -139,7 +147,7 @@ void WBC::body_yaw_height_task(double yaw_acc, double height_acc)
     A.block(0, 0, 2, 18) = _I_yaw_height;
     b = yaw_height;
 
-    _eq_task[4] = new eq_Task(A, b);
+    _eq_task[4] = new eq_Task(A, b, true);
 }
 
 void WBC::body_roll_pitch_task(double roll_acc, double pitch_acc)
@@ -152,7 +160,7 @@ void WBC::body_roll_pitch_task(double roll_acc, double pitch_acc)
     A.block(0,0,2,18) = _I_roll_pitch;
     b = roll_pitch;
 
-    _eq_task[5] = new eq_Task(A, b);
+    _eq_task[5] = new eq_Task(A, b, true);
 }
 
 void WBC::torque_limit_task()
@@ -162,7 +170,7 @@ void WBC::torque_limit_task()
     b.setZero(12, 1);
     A.block(0, 18, 12, 12) = _I_torque;
 
-    _eq_task[6] = new eq_Task(A, b);
+    _eq_task[6] = new eq_Task(A, b, true);
 }
 
 // contact is the contact situation of four foot 1: contact 0: swing
@@ -341,28 +349,70 @@ Vec12 WBC::inverse_dynamics(Vec18 qdd, Vec34 footforce, VecInt4 contact)
 void WBC::solve_HOproblem()
 {
     MatX d_bar;
-    VecX d1 = solve_QProblem_Ab(_eq_task[0]->_A, _eq_task[0]->_b);
-    d_bar = d1;
+    MatX C_bar;
+    // VecX d1 = solve_QProblem_Ab(_eq_task[0]->_A, _eq_task[0]->_b);
+    solve_QProblem(_eq_task[0]->_A, _eq_task[0]->_b, _ineq_task->_D, _ineq_task->_f);
+    d_bar = _di;
     Eigen::FullPivLU<MatX> lu1(_eq_task[0]->_A);
-    MatX C1_bar = lu1.kernel();
+    C_bar = lu1.kernel();
 
-    MatX A2_bar = _eq_task[1]->_A * C1_bar;
+    MatX A2_bar = _eq_task[1]->_A * C_bar;
     MatX b2 = _eq_task[1]->_b - _eq_task[1]->_A * d_bar;
-    MatX d2 = solve_QProblem_Ab(A2_bar, b2);
-    d_bar = d_bar + C1_bar * d2;
+    // MatX d2 = solve_QProblem_Ab(A2_bar, b2);
+    solve_QProblem(A2_bar, b2, _ineq_task->_D, _ineq_task->_f);
+    d_bar = d_bar + C_bar * _di;
     Eigen::FullPivLU<MatX> lu2(A2_bar);
-    MatX C2_bar = C1_bar * lu2.kernel();
+    C_bar = C_bar * lu2.kernel();
 
     // std::cout << "rank: " << C1_bar.rows() << "," << C1_bar.cols() << std::endl;
 
-    MatX A3_bar = _eq_task[2]->_A * C2_bar;
+    MatX A3_bar = _eq_task[2]->_A * C_bar;
     MatX b3 = _eq_task[2]->_b - _eq_task[2]->_A * d_bar;
     MatX d3 = solve_QProblem_Ab(A3_bar, b3);
-    d_bar = d_bar + C2_bar * d3;
+    // solve_QProblem(A3_bar, b3, _ineq_task->_D, _ineq_task->_f);
+    d_bar = d_bar + C_bar * d3;
+    Eigen::FullPivLU<MatX> lu3(A3_bar);
+    C_bar = C_bar * lu3.kernel();
+    
+
+    if (_eq_task[3]->_active == true)
+    {
+        MatX A4_bar = _eq_task[3]->_A * C_bar;
+        MatX b4 = _eq_task[3]->_b - _eq_task[3]->_A * d_bar;
+        MatX d4 = solve_QProblem_Ab(A4_bar, b4);
+        // solve_QProblem(A4_bar, b4, _ineq_task->_D, _ineq_task->_f);
+        d_bar = d_bar + C_bar * d4;
+        Eigen::FullPivLU<MatX> lu4(A4_bar);
+        C_bar = C_bar * lu4.kernel();
+    }
+    
+    MatX A5_bar = _eq_task[4]->_A * C_bar;
+    MatX b5 = _eq_task[4]->_b - _eq_task[4]->_A * d_bar;
+    MatX d5 = solve_QProblem_Ab(A5_bar, b5);
+    // solve_QProblem(A5_bar, b5, _ineq_task->_D, _ineq_task->_f);
+    d_bar = d_bar + C_bar * d5;
+    Eigen::FullPivLU<MatX> lu5(A5_bar);
+    C_bar = C_bar * lu5.kernel();
+    
+    MatX A6_bar = _eq_task[5]->_A * C_bar;
+    MatX b6 = _eq_task[5]->_b - _eq_task[5]->_A * d_bar;
+    MatX d6 = solve_QProblem_Ab(A6_bar, b6);
+    // solve_QProblem(A6_bar, b6, _ineq_task->_D, _ineq_task->_f);
+    d_bar = d_bar + C_bar * d6;
+    Eigen::FullPivLU<MatX> lu6(A6_bar);
+    C_bar = C_bar * lu6.kernel();
+    
+    MatX A7_bar = _eq_task[6]->_A * C_bar;
+    MatX b7 = _eq_task[6]->_b - _eq_task[6]->_A * d_bar;
+    MatX d7 = solve_QProblem_Ab(A7_bar, b7);
+    // solve_QProblem(A7_bar, b7, _ineq_task->_D, _ineq_task->_f);
+    d_bar = d_bar + C_bar * d7;
+    Eigen::FullPivLU<MatX> lu7(A7_bar);
+    C_bar = C_bar * lu7.kernel();
 
     _di = d_bar;
 
-    std::cout << "qdd: " << _di.block(0, 0, 18, 1).transpose() << std::endl;
+    // std::cout << "qdd: " << _di.block(0, 0, 18, 1).transpose() << std::endl;
     // std::cout << "tau: " << _di.block(18, 0, 12, 1).transpose() << std::endl;
 
     // MatX C_bar, d_bar, A_bar;
