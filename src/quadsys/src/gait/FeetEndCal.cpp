@@ -7,8 +7,8 @@ FeetEndCal::FeetEndCal(CtrlComponents *ctrlComp)
     _Tstance = ctrlComp->waveGen->getTstance();
     _Tswing = ctrlComp->waveGen->getTswing();
 
-    _kx = 0.005;
-    _ky = 0.005;
+    _kx = 0.01;
+    _ky = 0.01;
     _kyaw = 0.005;
 
     Vec34 feetPosBody = _robModel->getFeetPosIdeal();

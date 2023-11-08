@@ -115,10 +115,10 @@ public:
         v_base[4] = EstVelocity(1);
         v_base[5] = EstVelocity(2);
 
-        quaxyz[0] = 1;
-        quaxyz[1] = 0;
-        quaxyz[2] = 0;
-        quaxyz[3] = 0;
+        // quaxyz[0] = 1;
+        // quaxyz[1] = 0;
+        // quaxyz[2] = 0;
+        // quaxyz[3] = 0;
         quaxyz[4] = 0;
         quaxyz[5] = 0;
         quaxyz[6] = 0;

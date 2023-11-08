@@ -320,12 +320,12 @@ MatX Dynamics::Cal_Generalize_Bias_force_Flt(bool Gra_offset)
     Vec6 g = _gra;
 
     // 在floating base坐标系下表示g
-    g = _base->_fltjoint->_X_Wrd2Base * g;
+    // g = _base->_fltjoint->_X_Wrd2Base * g;
     // std::cout << "g_base: " << g.transpose() << std::endl;
     // 在floating base坐标系下表示v_base
     Vec6 v_base;
     v_base = _base->_fltjoint->_X_Wrd2Base * _robot->_v_base;
-    
+    // std::cout << "v_base: " << v_base.transpose() << std::endl;
     // forward pass, velocity and acceleration propagation
     for (int i = 0; i < _NB; i++)
     {

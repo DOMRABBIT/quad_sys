@@ -179,7 +179,7 @@ void a1Robot::update_footEnd()
     qicimat_temp = T_dwtree[9] * T_dwtree[10] * T_dwtree[11] * _lpjoint[3].Ts;
     qicifoot_temp.block(0, 3, 4, 1) = qicimat_temp.block(0, 3, 4, 1);
 
-    qicifoot_temp = _base->_fltjoint->_T_Base2Wrd * qicifoot_temp;
+    // qicifoot_temp = _base->_fltjoint->_T_Base2Wrd * qicifoot_temp;
     _endPfoot = qicifoot_temp.block(0, 0, 3, 4);
 }
 

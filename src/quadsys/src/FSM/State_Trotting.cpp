@@ -235,11 +235,13 @@ void State_Trotting::calcTau()
 
     /**************************************************************************************************************/
     Vec3 dw_world = _G2B_RotMat * _dWbd;
+    // dw_world << 0, 0, 1;
     Vec3 ddp_world = _G2B_RotMat * _ddPcd;
+    // ddp_world.setZero();
     _wbc->dynamics_consistence_task(*_contact);
     _wbc->closure_constrain_task();
     Vec2 ddr_xy;
-    ddr_xy << ddp_world(0) * 0.1, ddp_world(1) * 0.1;
+    ddr_xy << ddp_world(0) * 0.2, ddp_world(1) * 0.2;
     _wbc->desired_torso_motion_task(ddr_xy);
     Vec34 swingforceFeetWorld = _G2B_RotMat * _forceFeetGlobal;
     for (int i = 0; i < 4; i++)
