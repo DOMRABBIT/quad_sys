@@ -124,7 +124,7 @@ void State_Trotting::run()
     {
         if (_tau(i) > 33.5 || _tau(i) < -33.5)
         {
-            // std::cout << "OUT OF RANGE!" << std::endl;
+            std::cout << "joint(" << i << ") OUT OF RANGE!" << std::endl;
         }
     }
     _lowCmd->setTau(_tau);
@@ -244,7 +244,7 @@ void State_Trotting::calcTau()
     _wbc->dynamics_consistence_task(*_contact);
     _wbc->closure_constrain_task();
     Vec2 ddr_xy;
-    ddr_xy << ddp_base(0) * 0.4, ddp_base(1) * 0.8;
+    ddr_xy << ddp_base(0) * 0.8, ddp_base(1) * 1.5;
     // ddr_xy.setZero();
     _wbc->desired_torso_motion_task(ddr_xy);
     Vec34 swingforceFeetBase = _G2B_RotMat * _forceFeetGlobal;
@@ -256,11 +256,11 @@ void State_Trotting::calcTau()
         }
     }
     _wbc->swing_foot_motion_task(swingforceFeetBase, *_contact);
-    double yaw_acc = dw_base(2) * 0.4;      //
+    double yaw_acc = dw_base(2) * 1.4;      //
     double height_acc = ddp_base(2) * 1.0;  //
     _wbc->body_yaw_height_task(yaw_acc, height_acc);
-    double roll_acc = dw_base(0) * 10.0;    //
-    double pitch_acc = dw_base(1) * 20.0;   //
+    double roll_acc = dw_base(0) * 5.0;    //
+    double pitch_acc = dw_base(1) * 15.0;   //
     _wbc->body_roll_pitch_task(roll_acc, pitch_acc);
     _wbc->torque_limit_task();
     _wbc->friction_cone_task(*_contact);

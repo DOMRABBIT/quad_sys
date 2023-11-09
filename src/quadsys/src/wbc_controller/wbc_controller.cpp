@@ -126,7 +126,7 @@ void WBC::swing_foot_motion_task(Vec34 swing_acc,VecInt4 contact)
             PIMat.block(0, 0, 3, 3) = -px[i];
             _J_swingfoot.block(row_index * 3, 6 + 3 * i, 3, 3) = PIMat * _dy->Cal_Geometric_Jacobain(2+3*i, Coordiante::BASE).block(0, 3 * i, 6, 3);
             avp = _dy->_robot->_base->_fltjoint->_X_Wrd2Base * _dy->_ref_X_s[i] * _dy->_avp[2 + 3 * i];
-            b.block(row_index * 3, 0, 3, 1) = swing_acc.block(0, i, 3, 1) - avp.block(3,0,3,1);
+            b.block(row_index * 3, 0, 3, 1) = swing_acc.block(0, i, 3, 1) - avp.block(3, 0, 3, 1);
             row_index++;
         }
     }

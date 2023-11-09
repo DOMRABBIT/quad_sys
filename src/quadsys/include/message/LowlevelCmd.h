@@ -130,14 +130,14 @@ struct LowlevelCmd
     void setStableGain(int legID)
     {
         motorCmd[legID * 3 + 0].mode = 10;
-        motorCmd[legID * 3 + 0].Kp = 0.0;
-        motorCmd[legID * 3 + 0].Kd = 0.0;
+        motorCmd[legID * 3 + 0].Kp = 0.8;
+        motorCmd[legID * 3 + 0].Kd = 0.8;
         motorCmd[legID * 3 + 1].mode = 10;
-        motorCmd[legID * 3 + 1].Kp = 0.0;
-        motorCmd[legID * 3 + 1].Kd = 0.0;
+        motorCmd[legID * 3 + 1].Kp = 0.8;
+        motorCmd[legID * 3 + 1].Kd = 0.8;
         motorCmd[legID * 3 + 2].mode = 10;
-        motorCmd[legID * 3 + 2].Kp = 0.0;
-        motorCmd[legID * 3 + 2].Kd = 0.0;
+        motorCmd[legID * 3 + 2].Kp = 0.8;
+        motorCmd[legID * 3 + 2].Kd = 0.8;
     }
     void setStableGain()
     {
