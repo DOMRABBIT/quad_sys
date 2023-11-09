@@ -111,7 +111,7 @@ void State_Trotting::run()
     
     // for (int i = 0; i < 4;i++)
     // {
-    //     if((*_contact)(i) == 0)
+    //     if((*_contact)(i) == 1)
     //     {
     //         _tau.block(i * 3, 0, 3, 1) = _wbc->_qdd_torque.block(i * 3 + 18, 0, 3, 1);
     //     }
@@ -234,33 +234,41 @@ void State_Trotting::calcTau()
     }
 
     /**************************************************************************************************************/
-    Vec3 dw_world = _G2B_RotMat * _dWbd;
+    Vec3 dw_base = _G2B_RotMat * _dWbd;
     // dw_world << 0, 0, 1;
-    Vec3 ddp_world = _G2B_RotMat * _ddPcd;
+    Vec3 ddp_base = _G2B_RotMat * _ddPcd;
+    // std::cout << "ddp: " << ddp_base.transpose() << std::endl;
+    // std::cout << "dwb: " << dw_base.transpose() << std::endl;
+    // dw_base.setZero();
     // ddp_world.setZero();
     _wbc->dynamics_consistence_task(*_contact);
     _wbc->closure_constrain_task();
     Vec2 ddr_xy;
-    ddr_xy << ddp_world(0) * 0.4, ddp_world(1) * 0.8;
+    ddr_xy << ddp_base(0) * 0.4, ddp_base(1) * 0.8;
+    // ddr_xy.setZero();
     _wbc->desired_torso_motion_task(ddr_xy);
-    Vec34 swingforceFeetWorld = _G2B_RotMat * _forceFeetGlobal;
+    Vec34 swingforceFeetBase = _G2B_RotMat * _forceFeetGlobal;
     for (int i = 0; i < 4; i++)
     {
         if ((*_contact)(i) == 1)
         {
-            swingforceFeetWorld.col(i).setZero();
+            swingforceFeetBase.col(i).setZero();
         }
     }
-    _wbc->swing_foot_motion_task(swingforceFeetWorld, *_contact);
-    double yaw_acc = dw_world(2) * 0.4; //_dWbd(2)
-    double height_acc = ddp_world(2)*10.0;
+    _wbc->swing_foot_motion_task(swingforceFeetBase, *_contact);
+    double yaw_acc = dw_base(2) * 0.4;      //
+    double height_acc = ddp_base(2) * 1.0;  //
     _wbc->body_yaw_height_task(yaw_acc, height_acc);
-    double roll_acc = dw_world(0) * 5.0; //_dWbd(0) * 1.5
-    double pitch_acc = dw_world(1) * 15.0; // _dWbd(1) * 20.0
+    double roll_acc = dw_base(0) * 10.0;    //
+    double pitch_acc = dw_base(1) * 20.0;   //
     _wbc->body_roll_pitch_task(roll_acc, pitch_acc);
     _wbc->torque_limit_task();
     _wbc->friction_cone_task(*_contact);
     _wbc->solve_HOproblem();
+
+    // std::cout << "eq1: " << std::endl << _wbc->_eq_task[0]->_A << std::endl;
+    // std::cout << "b1: " << std::endl
+    //           << _wbc->_eq_task[0]->_b.transpose() << std::endl;
 
     /*******************************************************************************************************************/
     _forceFeetBody = _G2B_RotMat * _forceFeetGlobal;

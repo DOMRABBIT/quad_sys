@@ -108,20 +108,16 @@ public:
     {
         Vec3 EstPosition = estimator->getPosition();
         Vec3 EstVelocity = estimator->getVelocity();
+        Mat3 B2G_RotMat = estimator->_lowState->getRotMat();
+        Mat3 G2B_RotMat = B2G_RotMat.transpose();
         quaxyz[4] = EstPosition(0);
         quaxyz[5] = EstPosition(1);
         quaxyz[6] = EstPosition(2);
+
+        EstVelocity = G2B_RotMat * EstVelocity;
         v_base[3] = EstVelocity(0);
         v_base[4] = EstVelocity(1);
         v_base[5] = EstVelocity(2);
-
-        // quaxyz[0] = 1;
-        // quaxyz[1] = 0;
-        // quaxyz[2] = 0;
-        // quaxyz[3] = 0;
-        quaxyz[4] = 0;
-        quaxyz[5] = 0;
-        quaxyz[6] = 0;
 
         dy->_robot->set_q(q);
         dy->_robot->set_dq(qd);

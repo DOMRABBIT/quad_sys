@@ -35,7 +35,7 @@ public:
     Vec34 getFeetVel();
     Vec34 getPosFeet2BGlobal();
     void run();
-
+    LowlevelState *_lowState;
 #ifdef COMPILE_DEBUG
     void setPyPlot(PyPlot *plot) { _testPlot = plot; }
 #endif // COMPILE_DEBUG
@@ -75,7 +75,6 @@ private:
     Vec3 _g;
     Vec34 _feetPosGlobalKine, _feetVelGlobalKine;
 
-    LowlevelState *_lowState;
     QuadrupedRobot *_robModel;
     Vec4 *_phase;
     VecInt4 *_contact;
