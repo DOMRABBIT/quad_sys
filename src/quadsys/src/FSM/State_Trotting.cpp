@@ -241,7 +241,7 @@ void State_Trotting::calcTau()
     _wbc->dynamics_consistence_task(*_contact);
     _wbc->closure_constrain_task();
     Vec2 ddr_xy;
-    ddr_xy << ddp_world(0) * 0.2, ddp_world(1) * 0.2;
+    ddr_xy << ddp_world(0) * 0.4, ddp_world(1) * 0.8;
     _wbc->desired_torso_motion_task(ddr_xy);
     Vec34 swingforceFeetWorld = _G2B_RotMat * _forceFeetGlobal;
     for (int i = 0; i < 4; i++)
@@ -252,11 +252,11 @@ void State_Trotting::calcTau()
         }
     }
     _wbc->swing_foot_motion_task(swingforceFeetWorld, *_contact);
-    double yaw_acc = dw_world(2); //_dWbd(2)
-    double height_acc = ddp_world(2);
+    double yaw_acc = dw_world(2) * 0.4; //_dWbd(2)
+    double height_acc = ddp_world(2)*10.0;
     _wbc->body_yaw_height_task(yaw_acc, height_acc);
-    double roll_acc = dw_world(0) * 1.5; //_dWbd(0) * 1.5
-    double pitch_acc = dw_world(1) * 20.0; // _dWbd(1) * 20.0
+    double roll_acc = dw_world(0) * 5.0; //_dWbd(0) * 1.5
+    double pitch_acc = dw_world(1) * 15.0; // _dWbd(1) * 20.0
     _wbc->body_roll_pitch_task(roll_acc, pitch_acc);
     _wbc->torque_limit_task();
     _wbc->friction_cone_task(*_contact);
